@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.arch_github_components]
+status = "unit-tested"
+files = ["src/distro/arch_linux_github_pr_components.rs", "docs/PR_PROPOSAL_ARCH_LINUX_GITHUB_COMPONENTS.md"]
+description = "Arch Linux GitHub repository inspired components (mkinitcpio initramfs builder, pacman keyring manager, mirrorlist ranker, archinstall profile manager, and PR gateway engine)"
+test_evidence = "Unit tests pass via rustc --test src/distro/arch_linux_github_pr_components.rs"
+next_milestone = "Connect initramfs generator and keyring manager to live boot and package installation pipeline"
