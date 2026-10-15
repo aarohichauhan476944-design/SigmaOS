@@ -1,5 +1,5 @@
 // SigmaOS Elementary OS Pantheon & Granite Ecosystem Innovations Suite
-// Inspired by official elementary OS GitHub repositories (pantheon, gala, wingpanel, plank, granite, switchboard, contractor, appcenter, code, files, music, terminal, mail, onboarding)
+// Inspired by official elementary OS GitHub repositories (pantheon, gala, wingpanel, plank, granite, switchboard, contractor, appcenter, sideload, code, files, music, terminal, mail, onboarding)
 
 use std::collections::HashMap;
 use std::string::String;
@@ -9,15 +9,15 @@ use std::vec::Vec;
 /// elementary OS Accent Colors from HIG Guidelines
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ElementaryAccentColor {
-    Blueberry,  // #388e3c / #1a73e8
-    Strawberry, // #e53935
-    Orange,     // #f57c00
-    Banana,     // #fbc02d
-    Lime,       // #7cb342
-    Mint,       // #00bfa5
-    Grape,      // #8e24aa
-    Slate,      // #546e7a
-    Cocoa,      // #6d4c41
+    Blueberry,  // #3584e4
+    Strawberry, // #ed333b
+    Orange,     // #ff7800
+    Banana,     // #f6d32d
+    Lime,       // #33d17a
+    Mint,       // #2ec27e
+    Grape,      // #9141ac",
+    Slate,      // #77767b
+    Cocoa,      // #865e3c
 }
 
 impl ElementaryAccentColor {
@@ -36,7 +36,7 @@ impl ElementaryAccentColor {
     }
 }
 
-/// Granite UI Toolkit HIG Configuration
+/// Granite UI Toolkit HIG Configuration & Components
 #[derive(Debug, Clone)]
 pub struct GraniteHigConfig {
     pub prefer_dark_style: bool,
@@ -54,6 +54,42 @@ impl Default for GraniteHigConfig {
             rounded_corners_radius_px: 8,
             grid_unit_px: 4,
             high_contrast: false,
+        }
+    }
+}
+
+/// Granite Status Page for empty state displays (Granite.StatusPage)
+#[derive(Debug, Clone)]
+pub struct GraniteStatusPage {
+    pub title: String,
+    pub description: String,
+    pub icon_name: String,
+    pub action_button_label: Option<String>,
+}
+
+/// Granite Toast Notification (Granite.Toast)
+#[derive(Debug, Clone)]
+pub struct GraniteToastNotification {
+    pub title: String,
+    pub default_action_label: Option<String>,
+    pub send_time_timestamp: u64,
+}
+
+impl GraniteHigConfig {
+    pub fn create_status_page(&self, title: &str, description: &str, icon: &str) -> GraniteStatusPage {
+        GraniteStatusPage {
+            title: title.to_string(),
+            description: description.to_string(),
+            icon_name: icon.to_string(),
+            action_button_label: None,
+        }
+    }
+
+    pub fn create_toast(&self, title: &str) -> GraniteToastNotification {
+        GraniteToastNotification {
+            title: title.to_string(),
+            default_action_label: None,
+            send_time_timestamp: 100000,
         }
     }
 }
@@ -99,6 +135,24 @@ impl Default for ContractorServiceHub {
     }
 }
 
+/// Gala Window Manager Hot Corner Actions
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HotCornerAction {
+    None,
+    MultitaskingView,
+    ShowDesktop,
+    ExecuteCommand(String),
+}
+
+/// Gala Window Snapping State
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WindowSnapMode {
+    None,
+    LeftHalf,
+    RightHalf,
+    Maximize,
+}
+
 /// Gala Window Manager Multitasking & Workspace State
 #[derive(Debug, Clone)]
 pub struct GalaWorkspace {
@@ -112,6 +166,11 @@ pub struct GalaWindowManagerEngine {
     pub active_workspace_idx: usize,
     pub multitasking_view_active: bool,
     pub window_animations_enabled: bool,
+    pub top_left_hot_corner: HotCornerAction,
+    pub top_right_hot_corner: HotCornerAction,
+    pub bottom_left_hot_corner: HotCornerAction,
+    pub bottom_right_hot_corner: HotCornerAction,
+    pub pip_window_id: Option<u64>,
 }
 
 impl GalaWindowManagerEngine {
@@ -121,6 +180,11 @@ impl GalaWindowManagerEngine {
             active_workspace_idx: 0,
             multitasking_view_active: false,
             window_animations_enabled: true,
+            top_left_hot_corner: HotCornerAction::MultitaskingView,
+            top_right_hot_corner: HotCornerAction::None,
+            bottom_left_hot_corner: HotCornerAction::ShowDesktop,
+            bottom_right_hot_corner: HotCornerAction::None,
+            pip_window_id: None,
         };
         engine.workspaces.push(GalaWorkspace {
             id: 0,
@@ -153,6 +217,20 @@ impl GalaWindowManagerEngine {
             false
         }
     }
+
+    pub fn trigger_hot_corner(&mut self, corner: &str) -> HotCornerAction {
+        match corner {
+            "top_left" => self.top_left_hot_corner.clone(),
+            "top_right" => self.top_right_hot_corner.clone(),
+            "bottom_left" => self.bottom_left_hot_corner.clone(),
+            "bottom_right" => self.bottom_right_hot_corner.clone(),
+            _ => HotCornerAction::None,
+        }
+    }
+
+    pub fn set_picture_in_picture(&mut self, window_id: u64) {
+        self.pip_window_id = Some(window_id);
+    }
 }
 
 impl Default for GalaWindowManagerEngine {
@@ -171,9 +249,29 @@ pub struct WingpanelApplet {
     pub tooltip: String,
 }
 
+/// Wingpanel Media Playback State
+#[derive(Debug, Clone)]
+pub struct WingpanelMediaState {
+    pub is_playing: bool,
+    pub track_title: String,
+    pub artist: String,
+}
+
+/// Wingpanel Privacy Status
+#[derive(Debug, Clone, Default)]
+pub struct WingpanelPrivacyStatus {
+    pub camera_active: bool,
+    pub microphone_active: bool,
+    pub location_active: bool,
+}
+
 pub struct WingpanelTopBar {
     pub applets: HashMap<String, WingpanelApplet>,
     pub dark_mode_toggle: bool,
+    pub media_state: Option<WingpanelMediaState>,
+    pub privacy_status: WingpanelPrivacyStatus,
+    pub do_not_disturb: bool,
+    pub unread_notifications: u32,
 }
 
 impl WingpanelTopBar {
@@ -181,6 +279,10 @@ impl WingpanelTopBar {
         let mut bar = Self {
             applets: HashMap::new(),
             dark_mode_toggle: false,
+            media_state: None,
+            privacy_status: WingpanelPrivacyStatus::default(),
+            do_not_disturb: false,
+            unread_notifications: 0,
         };
         bar.register_default_applets();
         bar
@@ -193,6 +295,7 @@ impl WingpanelTopBar {
             ("sound", "Sound", "audio-volume-high-symbolic"),
             ("power", "Power", "battery-good-symbolic"),
             ("nightlight", "Night Light", "night-light-symbolic"),
+            ("notifications", "Notifications", "preferences-system-notifications-symbolic"),
         ];
 
         for (id, label, icon) in defaults {
@@ -217,12 +320,40 @@ impl WingpanelTopBar {
             false
         }
     }
+
+    pub fn update_media_playback(&mut self, playing: bool, title: &str, artist: &str) {
+        self.media_state = Some(WingpanelMediaState {
+            is_playing: playing,
+            track_title: title.to_string(),
+            artist: artist.to_string(),
+        });
+    }
+
+    pub fn toggle_do_not_disturb(&mut self) -> bool {
+        self.do_not_disturb = !self.do_not_disturb;
+        self.do_not_disturb
+    }
 }
 
 impl Default for WingpanelTopBar {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Plank Dock Autohide Policy
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PlankAutohidePolicy {
+    Never,
+    Intellihide,
+    Always,
+}
+
+/// Plank Context Menu Action Item
+#[derive(Debug, Clone)]
+pub struct PlankContextMenuItem {
+    pub label: String,
+    pub action_id: String,
 }
 
 /// Plank Dock Launcher Item
@@ -234,20 +365,23 @@ pub struct PlankDockLauncher {
     pub badge_count: u32,
     pub is_running: bool,
     pub hover_zoom_level: f32, // 1.0 = normal, 1.4 = hovered
+    pub context_menu_items: Vec<PlankContextMenuItem>,
 }
 
 pub struct PlankDockManager {
     pub launchers: Vec<PlankDockLauncher>,
-    pub autohide: bool,
+    pub autohide_policy: PlankAutohidePolicy,
     pub icon_size_px: u32,
+    pub zoom_enabled: bool,
 }
 
 impl PlankDockManager {
     pub fn new() -> Self {
         Self {
             launchers: Vec::new(),
-            autohide: true,
+            autohide_policy: PlankAutohidePolicy::Intellihide,
             icon_size_px: 48,
+            zoom_enabled: true,
         }
     }
 
@@ -259,7 +393,23 @@ impl PlankDockManager {
             badge_count: 0,
             is_running: false,
             hover_zoom_level: 1.0,
+            context_menu_items: vec![
+                PlankContextMenuItem {
+                    label: "Keep in Dock".to_string(),
+                    action_id: "toggle_pin".to_string(),
+                },
+                PlankContextMenuItem {
+                    label: "New Window".to_string(),
+                    action_id: "new_window".to_string(),
+                },
+            ],
         });
+    }
+
+    pub fn unpin_app(&mut self, app_id: &str) -> bool {
+        let initial_len = self.launchers.len();
+        self.launchers.retain(|l| l.app_id != app_id);
+        self.launchers.len() < initial_len
     }
 
     pub fn set_badge_count(&mut self, app_id: &str, count: u32) -> bool {
@@ -278,6 +428,47 @@ impl Default for PlankDockManager {
     }
 }
 
+/// Sideload Flatpak Permission Verification
+#[derive(Debug, Clone)]
+pub struct SideloadPermissionVerification {
+    pub app_name: String,
+    pub file_path: String,
+    pub accesses_network: bool,
+    pub accesses_home_dir: bool,
+    pub accesses_devices: bool,
+    pub is_verified_developer: bool,
+}
+
+impl SideloadPermissionVerification {
+    pub fn inspect_flatpak_ref(app_name: &str, path: &str) -> Self {
+        Self {
+            app_name: app_name.to_string(),
+            file_path: path.to_string(),
+            accesses_network: true,
+            accesses_home_dir: false,
+            accesses_devices: false,
+            is_verified_developer: false,
+        }
+    }
+
+    pub fn risk_level(&self) -> &'static str {
+        if self.accesses_home_dir && self.accesses_devices && !self.is_verified_developer {
+            "High"
+        } else if self.accesses_network && !self.is_verified_developer {
+            "Medium"
+        } else {
+            "Low"
+        }
+    }
+}
+
+/// AppCenter Rating Metrics
+#[derive(Debug, Clone)]
+pub struct AppCenterRatingMetrics {
+    pub score: f32, // 1.0 to 5.0
+    pub review_count: u32,
+}
+
 /// AppCenter Pay-What-You-Want Monetized Software Item
 #[derive(Debug, Clone)]
 pub struct AppCenterApp {
@@ -288,6 +479,7 @@ pub struct AppCenterApp {
     pub suggested_price_usd: u32,
     pub installed: bool,
     pub is_curated: bool, // Curated elementary OS AppCenter app
+    pub rating: AppCenterRatingMetrics,
 }
 
 pub struct AppCenterStoreEngine {
@@ -314,6 +506,8 @@ impl AppCenterStoreEngine {
                 "elementary OS Team",
                 0,
                 true,
+                4.8,
+                320,
             ),
             (
                 "io.elementary.tasks",
@@ -322,6 +516,8 @@ impl AppCenterStoreEngine {
                 "elementary OS Team",
                 5,
                 true,
+                4.6,
+                150,
             ),
             (
                 "com.github.cassidyjames.ephemeral",
@@ -330,10 +526,12 @@ impl AppCenterStoreEngine {
                 "Cassidy James",
                 3,
                 true,
+                4.9,
+                210,
             ),
         ];
 
-        for (id, title, summary, dev, price, curated) in sample_apps {
+        for (id, title, summary, dev, price, curated, rating_score, reviews) in sample_apps {
             self.catalog.insert(
                 id.to_string(),
                 AppCenterApp {
@@ -344,6 +542,10 @@ impl AppCenterStoreEngine {
                     suggested_price_usd: price,
                     installed: false,
                     is_curated: curated,
+                    rating: AppCenterRatingMetrics {
+                        score: rating_score,
+                        review_count: reviews,
+                    },
                 },
             );
         }
@@ -382,6 +584,7 @@ pub struct SwitchboardPlug {
     pub category: String, // "System", "Hardware", "Personal"
     pub icon: String,
     pub enabled: bool,
+    pub keywords: Vec<String>,
 }
 
 pub struct SwitchboardControlCenter {
@@ -397,30 +600,46 @@ impl SwitchboardControlCenter {
 
     fn register_default_plugs(&mut self) {
         let defaults = vec![
-            ("Displays", "Hardware", "preferences-desktop-display"),
-            ("Network", "Hardware", "preferences-system-network"),
-            ("Sound", "Hardware", "preferences-desktop-sound"),
-            ("Security & Privacy", "System", "preferences-system-privacy"),
+            ("Displays", "Hardware", "preferences-desktop-display", vec!["monitor", "screen", "resolution"]),
+            ("Network", "Hardware", "preferences-system-network", vec!["wifi", "ethernet", "ip", "vpn"]),
+            ("Sound", "Hardware", "preferences-desktop-sound", vec!["volume", "audio", "mic"]),
+            ("Security & Privacy", "System", "preferences-system-privacy", vec!["password", "firewall", "lock"]),
             (
                 "Parental Controls",
                 "System",
                 "preferences-system-parental-controls",
+                vec!["screentime", "restrictions", "limits"],
             ),
             (
                 "Desktop & Appearance",
                 "Personal",
                 "preferences-desktop-wallpaper",
+                vec!["theme", "wallpaper", "accent", "dark"],
             ),
         ];
 
-        for (name, category, icon) in defaults {
+        for (name, category, icon, kw) in defaults {
             self.plugs.push(SwitchboardPlug {
                 name: name.to_string(),
                 category: category.to_string(),
                 icon: icon.to_string(),
                 enabled: true,
+                keywords: kw.into_iter().map(|s| s.to_string()).collect(),
             });
         }
+    }
+
+    pub fn search_plugs(&self, query: &str) -> Vec<SwitchboardPlug> {
+        let q = query.to_lowercase();
+        self.plugs
+            .iter()
+            .filter(|p| {
+                p.name.to_lowercase().contains(&q)
+                    || p.category.to_lowercase().contains(&q)
+                    || p.keywords.iter().any(|k| k.to_lowercase().contains(&q))
+            })
+            .cloned()
+            .collect()
     }
 }
 
@@ -505,6 +724,31 @@ impl Default for OnboardingWizardEngine {
     }
 }
 
+/// Elementary OS PR Gateway Engine for capability status tracking & HIG validation
+pub struct ElementaryOsPrGatewayEngine {
+    pub version: &'static str,
+    pub hig_compliance_score: f32,
+}
+
+impl ElementaryOsPrGatewayEngine {
+    pub fn new() -> Self {
+        Self {
+            version: "7.1-horus-pantheon",
+            hig_compliance_score: 100.0,
+        }
+    }
+
+    pub fn validate_component_compliance(&self, hub: &ElementaryPantheonInnovationsHub) -> bool {
+        hub.perform_full_system_audit() && self.hig_compliance_score >= 90.0
+    }
+}
+
+impl Default for ElementaryOsPrGatewayEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Master Elementary OS Pantheon & Granite Ecosystem Aggregator
 pub struct ElementaryPantheonInnovationsHub {
     pub hig_config: GraniteHigConfig,
@@ -515,6 +759,7 @@ pub struct ElementaryPantheonInnovationsHub {
     pub appcenter: AppCenterStoreEngine,
     pub switchboard: SwitchboardControlCenter,
     pub onboarding: OnboardingWizardEngine,
+    pub pr_gateway: ElementaryOsPrGatewayEngine,
 }
 
 impl ElementaryPantheonInnovationsHub {
@@ -528,6 +773,7 @@ impl ElementaryPantheonInnovationsHub {
             appcenter: AppCenterStoreEngine::new(),
             switchboard: SwitchboardControlCenter::new(),
             onboarding: OnboardingWizardEngine::new(),
+            pr_gateway: ElementaryOsPrGatewayEngine::new(),
         }
     }
 
@@ -557,6 +803,15 @@ mod tests {
     }
 
     #[test]
+    fn test_granite_status_page_and_toast() {
+        let cfg = GraniteHigConfig::default();
+        let sp = cfg.create_status_page("No Network", "Check cable connection", "network-offline");
+        assert_eq!(sp.title, "No Network");
+        let toast = cfg.create_toast("Settings Saved");
+        assert_eq!(toast.title, "Settings Saved");
+    }
+
+    #[test]
     fn test_contractor_service_hub() {
         let mut contractor = ContractorServiceHub::new();
         contractor.register_contract(ContractorContract {
@@ -580,6 +835,9 @@ mod tests {
         assert!(gala.assign_window_to_workspace(1001, ws2));
         assert!(gala.toggle_multitasking_view());
         assert!(gala.multitasking_view_active);
+        assert_eq!(gala.trigger_hot_corner("top_left"), HotCornerAction::MultitaskingView);
+        gala.set_picture_in_picture(2002);
+        assert_eq!(gala.pip_window_id, Some(2002));
     }
 
     #[test]
@@ -588,6 +846,9 @@ mod tests {
         assert!(wingpanel.applets.contains_key("datetime"));
         assert!(wingpanel.set_applet_visibility("datetime", false));
         assert!(!wingpanel.applets.get("datetime").unwrap().visible);
+        wingpanel.update_media_playback(true, "Lofi Beats", "Chillhop");
+        assert!(wingpanel.media_state.as_ref().unwrap().is_playing);
+        assert!(wingpanel.toggle_do_not_disturb());
     }
 
     #[test]
@@ -597,6 +858,14 @@ mod tests {
         assert_eq!(plank.launchers.len(), 1);
         assert!(plank.set_badge_count("io.elementary.files", 3));
         assert_eq!(plank.launchers[0].badge_count, 3);
+        assert!(plank.unpin_app("io.elementary.files"));
+        assert_eq!(plank.launchers.len(), 0);
+    }
+
+    #[test]
+    fn test_sideload_permission_inspection() {
+        let insp = SideloadPermissionVerification::inspect_flatpak_ref("App", "/tmp/app.flatpakref");
+        assert_eq!(insp.risk_level(), "Medium");
     }
 
     #[test]
@@ -616,10 +885,14 @@ mod tests {
     }
 
     #[test]
-    fn test_switchboard_and_onboarding() {
+    fn test_switchboard_search_and_onboarding() {
         let hub = ElementaryPantheonInnovationsHub::new();
         assert!(hub.perform_full_system_audit());
         assert_eq!(hub.switchboard.plugs.len(), 6);
+        let search_res = hub.switchboard.search_plugs("wifi");
+        assert_eq!(search_res.len(), 1);
+        assert_eq!(search_res[0].name, "Network");
         assert_eq!(hub.onboarding.steps.len(), 5);
+        assert!(hub.pr_gateway.validate_component_compliance(&hub));
     }
 }

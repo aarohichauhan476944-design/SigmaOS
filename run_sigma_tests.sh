@@ -110,6 +110,13 @@ if [ -f "src/desktop/mint_backup_tool.rs" ]; then
     ./build/mint_backup_tool_test
 fi
 
+if [ -f "src/desktop/elementary_pantheon_innovations.rs" ]; then
+    echo "Running Elementary OS Pantheon & Granite Ecosystem Innovations test suite..."
+    mkdir -p build
+    rustc --test --edition=2021 src/desktop/elementary_pantheon_innovations.rs -o build/elementary_pantheon_test
+    ./build/elementary_pantheon_test
+fi
+
 if [ -f "src/backup/sovereign_backup_and_recovery_advancements.rs" ]; then
     echo "Running Sovereign Backup & Recovery Advancements Master Suite test suite..."
     mkdir -p build
