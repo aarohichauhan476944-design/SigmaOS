@@ -197,7 +197,7 @@ fi
 if [ -f "src/compatibility/sovereign_mint_pr_components_engine.rs" ]; then
     echo "Running Sovereign Linux Mint PR Components Deployment test suite..."
     mkdir -p build
-    rustc --test src/compatibility/sovereign_mint_pr_components_engine.rs --edition=2021 -o build/test_mint_pr_deploy
+    rustc --test src/compatibility/sovereign_mint_pr_components_engine.rs --edition=2021 --cfg 'feature="standalone_test"' -o build/test_mint_pr_deploy
     ./build/test_mint_pr_deploy
 fi
 
