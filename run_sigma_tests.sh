@@ -1276,4 +1276,11 @@ if [ -f "src/creative/deckcraft.rs" ]; then
     ./build/test_deckcraft
 fi
 
+if [ -f "src/distro/parrot_github_repo_components_pr.rs" ]; then
+    echo "Running Sovereign Parrot Linux GitHub Repo Components PR Engine test suite..."
+    mkdir -p build
+    rustc --test src/distro/parrot_github_repo_components_pr.rs --edition=2021 -o build/test_parrot_pr
+    ./build/test_parrot_pr
+fi
+
 echo "All SigmaOS test suites completed."
