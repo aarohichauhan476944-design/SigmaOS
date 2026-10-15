@@ -139,6 +139,7 @@ pub use linux_bsd_inspirations::{
 };
 pub mod ecosystem_dimensions;
 pub mod endeavour_os;
+pub use endeavour_os::*;
 pub mod fedora_innovations;
 pub mod fedora_parity;
 pub use fedora_innovations::*;
