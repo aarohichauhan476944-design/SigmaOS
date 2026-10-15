@@ -212,7 +212,10 @@ pub use automation::{
 pub use compatibility::mint_omarchy_migration_bridge::*;
 pub use compatibility::{
     ApplicationBinary, BinaryFormat, CompatibilityError, CompatibilityManager, CompatibilityMode,
-    ContainerRuntime, FedoraMasterPrDeploymentSuite, MintMasterPrDeploymentSuite, TargetPlatform,
+    ContainerRuntime, FedoraMasterPrDeploymentSuite, MintDesktopLocalePrDeployer,
+    MintMasterPrDeploymentSuite, MintMediaUtilitiesPrDeployer, MintPrPullRequestSpec,
+    MintSystemDiagnosticsPrDeployer, MintToolsWarpinatorPrDeployer,
+    MintUpdateSoftwareInstallPrDeployer, MintXAppCinnamonPrDeployer, TargetPlatform,
     TranslationLayer,
 };
 pub use container::{
