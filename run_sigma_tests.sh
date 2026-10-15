@@ -1191,6 +1191,13 @@ if [ -f "src/distro/sovereign_open_source_os_fedora_github_pr_suite.rs" ]; then
     ./build/test_fedora_github_pr_suite
 fi
 
+if [ -f "src/distro/sovereign_fedora_github_repo_advancements_pr.rs" ]; then
+    echo "Running Sovereign Fedora Linux GitHub Repo Advancements PR test suite..."
+    mkdir -p build
+    rustc --test src/distro/sovereign_fedora_github_repo_advancements_pr.rs --edition=2021 -o build/test_fedora_advancements
+    ./build/test_fedora_advancements
+fi
+
 if [ -f "src/distro/debian_github_repo_inspirations_pr.rs" ]; then
     echo "Running Debian GitHub Repo Inspirations PR Suite test suite..."
     mkdir -p build
