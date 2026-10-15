@@ -157,7 +157,7 @@ use access_control::{NtfsAce, NtfsDacl, PosixAclTable, SecurityIdentifier};
 use community_toolkit::{HybridFirewallTemplateStore, VirtualizationBlueprintStore};
 use debian_compat::{AptRepositorySync, DebianAlternativesSystem, DebianChannel};
 use elf_relocation::{ElfRelaEntry, ElfRelocator, ElfSymbol, R_X86_64_GLOB_DAT, R_X86_64_RELATIVE};
-use endeavour_os::{AurPackageSpec, PacmanMirror, ReflectorMirrorManager, YayParuHelper};
+use endeavour_os::*;
 use epoll::{EpollEvent, EpollInstance, EpollOp, EPOLLET, EPOLLIN};
 use fedora_compat::{DnfPackageResolver, SeLinuxContext, SeLinuxEngine};
 use geom::{BioRequest, GeomProvider, GeomTopology};
@@ -450,10 +450,11 @@ fn test_endeavour_os_parity() {
     reflector.add_mirror(PacmanMirror {
         country: "Germany".to_string(),
         url: "https://fast.archlinux.de".to_string(),
+        protocol: MirrorProtocol::Https,
         latency_ms: 10,
         speed_kbps: 20000,
     });
-    let ranked = reflector.rank_mirrors(Some("Germany"));
+    let ranked = reflector.rank_mirrors(Some("Germany"), Some(MirrorProtocol::Https), Some(50));
     assert_eq!(ranked[0].url, "https://fast.archlinux.de");
 
     let mut helper = YayParuHelper::new();
@@ -464,6 +465,23 @@ fn test_endeavour_os_parity() {
         votes: 500,
     });
     assert!(helper.build_and_install("yay-bin").is_ok());
+
+    let mut welcome = EosWelcomeApp::new();
+    assert!(welcome.execute_task(WelcomeButtonTask::ConfigurePipewireAudio).is_ok());
+    let dev_pkgs = welcome.install_software_profile(SoftwareProfilePreset::DeveloperWorkstation).unwrap();
+    assert!(dev_pkgs.contains(&"docker".to_string()));
+
+    let log_tool = EosLogTool::new();
+    let upload = log_tool.upload_system_logs("log data for user bob", "bob");
+    assert!(upload.is_ok());
+
+    let mut akm = AkmKernelManager::new();
+    akm.install_kernel(EosKernelFlavor::LinuxZen);
+    assert!(akm.switch_active_kernel(EosKernelFlavor::LinuxZen).is_ok());
+
+    let pr_engine = SovereignEndeavourOsGitHubRepoPrEngine::new();
+    let prs = pr_engine.generate_all_eos_prs();
+    assert_eq!(prs.len(), 6);
 }
 
 #[test]

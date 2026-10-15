@@ -1198,6 +1198,13 @@ if [ -f "src/distro/debian_github_repo_inspirations_pr.rs" ]; then
     ./build/test_debian_pr
 fi
 
+if [ -f "src/distro/endeavour_os.rs" ]; then
+    echo "Running EndeavourOS parity and GitHub inspirations test suite..."
+    mkdir -p build
+    rustc --test src/distro/endeavour_os.rs --edition=2021 --cfg 'feature="standalone_test"' -o build/endeavour_os_test
+    ./build/endeavour_os_test
+fi
+
 if [ -f "src/signal/sovereign_signal_development_and_pr_suite.rs" ]; then
     echo "Running Sovereign Signal Development and Parity PR Suite..."
     mkdir -p build
