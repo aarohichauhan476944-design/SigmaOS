@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.arch_github_repo_pr_components]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Arch Linux GitHub repository components (mkinitcpio initramfs engine, pacman keyring manager, reflector mirror ranker, archinstall profile manager, and PR gateway engine)."
