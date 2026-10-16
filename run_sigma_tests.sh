@@ -994,6 +994,13 @@ if [ -f "src/distro/sovereign_linux_bsd_all_subsystems_harmony.rs" ]; then
     ./build/test_subsystem_harmony
 fi
 
+if [ -f "src/distro/gentoo_github_repo_inspirations_pr.rs" ]; then
+    echo "Running Gentoo Linux GitHub Repo Inspirations PR Suite..."
+    mkdir -p build
+    rustc --test src/distro/gentoo_github_repo_inspirations_pr.rs --edition=2021 -o build/test_gentoo_github_repo_pr
+    ./build/test_gentoo_github_repo_pr
+fi
+
 if [ -f "src/distro/sovereign_gentoo_gap_closure_pr_engine.rs" ]; then
     echo "Running Sovereign Gentoo Linux Gap Closure PR Engine test suite..."
     mkdir -p build
