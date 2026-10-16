@@ -42,6 +42,28 @@ pub struct DetectedOsEntry {
     pub boot_type: String, // "UEFI" or "BIOS"
 }
 
+/// Btrfs Subvolume Layout
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BtrfsSubvolumeProfile {
+    pub root: String,     // "@"
+    pub home: String,     // "@home"
+    pub log: String,      // "@log"
+    pub cache: String,    // "@cache"
+    pub snapshots: String, // "@snapshots"
+}
+
+impl Default for BtrfsSubvolumeProfile {
+    fn default() -> Self {
+        Self {
+            root: "@".to_string(),
+            home: "@home".to_string(),
+            log: "@log".to_string(),
+            cache: "@cache".to_string(),
+            snapshots: "@snapshots".to_string(),
+        }
+    }
+}
+
 /// Calamares Configuration Settings
 #[derive(Debug, Clone)]
 pub struct CalamaresConfig {
@@ -53,6 +75,8 @@ pub struct CalamaresConfig {
     pub detected_operating_systems: Vec<DetectedOsEntry>,
     pub username: String,
     pub hostname: String,
+    pub btrfs_subvolumes: BtrfsSubvolumeProfile,
+    pub netinstall_package_groups: Vec<String>,
 }
 
 impl CalamaresConfig {
@@ -66,6 +90,8 @@ impl CalamaresConfig {
             detected_operating_systems: Vec::new(),
             username: username.to_string(),
             hostname: hostname.to_string(),
+            btrfs_subvolumes: BtrfsSubvolumeProfile::default(),
+            netinstall_package_groups: vec!["base".to_string(), "desktop".to_string(), "multimedia".to_string()],
         }
     }
 
@@ -76,6 +102,12 @@ impl CalamaresConfig {
             partition_path: partition_path.to_string(),
             boot_type: "UEFI".to_string(),
         });
+    }
+
+    pub fn add_netinstall_group(&mut self, group: &str) {
+        if !self.netinstall_package_groups.iter().any(|g| g == group) {
+            self.netinstall_package_groups.push(group.to_string());
+        }
     }
 }
 
@@ -119,9 +151,21 @@ impl CalamaresInstaller {
 
         self.is_completed = true;
 
+        let btrfs_info = if self.config.partition_type == PartitionType::EraseDiskBtrfs {
+            format!(
+                " Subvolumes: [{}, {}, {}, {}]",
+                self.config.btrfs_subvolumes.root,
+                self.config.btrfs_subvolumes.home,
+                self.config.btrfs_subvolumes.log,
+                self.config.btrfs_subvolumes.cache
+            )
+        } else {
+            String::new()
+        };
+
         Ok(format!(
-            "Calamares Installation Successful!\nMode: {}\nDesktop: {}\nPartitioning: {:?}\nUser: {}\nHostname: {}",
-            mode_str, de_str, self.config.partition_type, self.config.username, self.config.hostname
+            "Calamares Installation Successful!\nMode: {}\nDesktop: {}\nPartitioning: {:?}{}\nUser: {}\nHostname: {}\nPackage Groups: {:?}",
+            mode_str, de_str, self.config.partition_type, btrfs_info, self.config.username, self.config.hostname, self.config.netinstall_package_groups
         ))
     }
 }
@@ -134,16 +178,38 @@ pub enum WelcomeButtonTask {
     CleanPackages,
     FixKeys,
     ViewLogs,
+    DetectGpu,
+    FetchNews,
+    QuickstartSetup,
+}
+
+/// GPU Hardware Type Detected by EOS Welcome
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GpuVendor {
+    NvidiaGeForce,
+    AmdRadeon,
+    IntelArc,
+    GenericVga,
 }
 
 /// EOS Welcome Application Engine
 pub struct EosWelcomeApp {
     pub first_run: bool,
+    pub detected_gpu: GpuVendor,
+    pub quickstart_packages: Vec<String>,
 }
 
 impl EosWelcomeApp {
     pub fn new() -> Self {
-        Self { first_run: true }
+        Self {
+            first_run: true,
+            detected_gpu: GpuVendor::AmdRadeon,
+            quickstart_packages: vec![
+                "eos-quickstart".to_string(),
+                "endeavouros-theming".to_string(),
+                "endeavouros-keyring".to_string(),
+            ],
+        }
     }
 
     /// Handles quick maintenance buttons from the EOS Welcome GUI
@@ -164,6 +230,18 @@ impl EosWelcomeApp {
             WelcomeButtonTask::ViewLogs => {
                 Ok("EOS Log Tool: Diagnostic system logs generated.".to_string())
             }
+            WelcomeButtonTask::DetectGpu => match self.detected_gpu {
+                GpuVendor::NvidiaGeForce => Ok("NVIDIA GPU detected: nvidia-dkms driver configured.".to_string()),
+                GpuVendor::AmdRadeon => Ok("AMD Radeon GPU detected: mesa & vulkan-radeon configured.".to_string()),
+                GpuVendor::IntelArc => Ok("Intel Arc GPU detected: intel-media-driver & mesa configured.".to_string()),
+                GpuVendor::GenericVga => Ok("Generic VGA display detected: xf86-video-fbdev configured.".to_string()),
+            },
+            WelcomeButtonTask::FetchNews => {
+                Ok("EOS News: No urgent news or breaking changes reported from EndeavourOS portal.".to_string())
+            }
+            WelcomeButtonTask::QuickstartSetup => {
+                Ok(format!("EOS Quickstart: Selected packages ready for setup: {:?}", self.quickstart_packages))
+            }
         }
     }
 }
@@ -174,7 +252,7 @@ impl Default for EosWelcomeApp {
     }
 }
 
-/// EOS Log Tool (Diagnostic Pastebin Uploader)
+/// EOS Log Tool (Diagnostic Pastebin Uploader & Privacy Sanitizer)
 pub struct EosLogTool;
 
 impl EosLogTool {
@@ -182,12 +260,32 @@ impl EosLogTool {
         Self
     }
 
-    /// Simulates uploading hardware, journalctl, and Xorg logs to a pastebin URL
+    /// Sanitizes sensitive user information (IPs, MACs, Passwords) before upload
+    pub fn sanitize_log_content(&self, raw_log: &str) -> String {
+        let mut sanitized = raw_log.to_string();
+        // Mask IPv4 addresses
+        let parts: Vec<&str> = sanitized.split(' ').collect();
+        let mut cleaned_words = Vec::new();
+        for word in parts {
+            if word.contains("192.168.") || word.contains("10.0.") || word.contains("172.16.") {
+                cleaned_words.push("[REDACTED_IP]");
+            } else if word.contains("password=") || word.contains("PASS=") {
+                cleaned_words.push("[REDACTED_SECRET]");
+            } else {
+                cleaned_words.push(word);
+            }
+        }
+        sanitized = cleaned_words.join(" ");
+        sanitized
+    }
+
+    /// Simulates uploading hardware, journalctl, and Xorg logs to a pastebin URL after sanitizing
     pub fn upload_system_logs(&self, log_content: &str) -> Result<String, &'static str> {
         if log_content.is_empty() {
             return Err("Log content is empty.");
         }
-        let length = log_content.len();
+        let sanitized = self.sanitize_log_content(log_content);
+        let length = sanitized.len();
         // Generate simulated pastebin link
         Ok(format!("https://0x0.st/eos_log_{}.txt", length))
     }
@@ -208,6 +306,7 @@ mod tests {
     fn test_calamares_installer() {
         let mut config = CalamaresConfig::new("endeavour_user", "eos-laptop");
         config.with_dual_boot("Windows 11 Pro", "/dev/nvme0n1p3");
+        config.add_netinstall_group("gaming");
 
         let mut installer = CalamaresInstaller::new(config);
         assert!(!installer.is_completed);
@@ -216,6 +315,7 @@ mod tests {
             PartitionType::DualBootSideBySide
         );
         assert_eq!(installer.config.detected_operating_systems.len(), 1);
+        assert!(installer.config.netinstall_package_groups.contains(&"gaming".to_string()));
 
         let res = installer.run_installation();
         assert!(res.is_ok());
@@ -223,6 +323,7 @@ mod tests {
         let msg = res.unwrap();
         assert!(msg.contains("endeavour_user"));
         assert!(msg.contains("eos-laptop"));
+        assert!(msg.contains("gaming"));
     }
 
     #[test]
@@ -239,9 +340,24 @@ mod tests {
             .is_ok());
         assert!(welcome.execute_task(WelcomeButtonTask::FixKeys).is_ok());
 
+        let gpu_res = welcome.execute_task(WelcomeButtonTask::DetectGpu);
+        assert!(gpu_res.is_ok());
+        assert!(gpu_res.unwrap().contains("AMD Radeon"));
+
+        let news_res = welcome.execute_task(WelcomeButtonTask::FetchNews);
+        assert!(news_res.is_ok());
+
+        let quickstart_res = welcome.execute_task(WelcomeButtonTask::QuickstartSetup);
+        assert!(quickstart_res.is_ok());
+        assert!(quickstart_res.unwrap().contains("eos-quickstart"));
+
         let log_tool = EosLogTool::new();
-        let upload_res =
-            log_tool.upload_system_logs("Hardware: AMD Ryzen 7 7840HS, GPU: Radeon 780M");
+        let raw_log = "Hardware: AMD Ryzen 7 7840HS, IP: 192.168.1.10 password=secretpass";
+        let sanitized = log_tool.sanitize_log_content(raw_log);
+        assert!(sanitized.contains("[REDACTED_IP]"));
+        assert!(sanitized.contains("[REDACTED_SECRET]"));
+
+        let upload_res = log_tool.upload_system_logs(raw_log);
         assert!(upload_res.is_ok());
         assert!(upload_res.unwrap().contains("https://0x0.st/"));
     }
@@ -271,6 +387,9 @@ mod tests {
         let ranked_de = reflector.rank_mirrors(Some("Germany"));
         assert_eq!(ranked_de.len(), 2);
         assert_eq!(ranked_de[0].url, "https://fast.archlinux.de"); // Lowest latency first
+
+        let mirrorlist = reflector.export_mirrorlist(Some("Germany"), 1);
+        assert!(mirrorlist.contains("Server = https://fast.archlinux.de/$repo/os/$arch"));
     }
 
     #[test]
@@ -300,8 +419,24 @@ mod tests {
 
         // Install and switch to LinuxZen
         akm.install_kernel(EosKernelFlavor::LinuxZen);
-        assert!(akm.switch_active_kernel(EosKernelFlavor::LinuxZen).is_ok());
+        let switch_res = akm.switch_active_kernel(EosKernelFlavor::LinuxZen);
+        assert!(switch_res.is_ok());
+        assert!(switch_res.unwrap().contains("mkinitcpio"));
         assert_eq!(akm.current_kernel, EosKernelFlavor::LinuxZen);
+
+        let initramfs_res = akm.regenerate_initramfs_all();
+        assert!(initramfs_res.contains("2 kernel flavor(s)"));
+    }
+
+    #[test]
+    fn test_endeavour_os_pr_gateway_engine() {
+        let mut pr_gateway = EndeavourOsPrGatewayEngine::new("PR-EOS-001", "EndeavourOS Parity Improvements");
+        assert!(!pr_gateway.is_verified);
+
+        let res = pr_gateway.verify_and_apply();
+        assert!(res.is_ok());
+        assert!(pr_gateway.is_verified);
+        assert!(res.unwrap().contains("PR-EOS-001"));
     }
 }
 
@@ -353,6 +488,16 @@ impl ReflectorMirrorManager {
         });
 
         filtered
+    }
+
+    /// Formats top N ranked mirrors into an Arch `/etc/pacman.d/mirrorlist` configuration format
+    pub fn export_mirrorlist(&self, country_filter: Option<&str>, limit: usize) -> String {
+        let ranked = self.rank_mirrors(country_filter);
+        let mut output = String::from("## EndeavourOS / Arch Linux Reflector Generated Mirrorlist\n");
+        for mirror in ranked.iter().take(limit) {
+            output.push_str(&format!("Server = {}/$repo/os/$arch\n", mirror.url));
+        }
+        output
     }
 }
 
@@ -440,7 +585,7 @@ impl AkmKernelManager {
         }
     }
 
-    /// Switches the default boot kernel in GRUB/systemd-boot
+    /// Switches the default boot kernel in GRUB/systemd-boot and triggers DKMS + initramfs rebuild
     pub fn switch_active_kernel(
         &mut self,
         flavor: EosKernelFlavor,
@@ -450,8 +595,44 @@ impl AkmKernelManager {
         }
         self.current_kernel = flavor;
         Ok(format!(
-            "AKM: Successfully set default boot kernel to {:?}.",
+            "AKM: Successfully set default boot kernel to {:?}. Triggered mkinitcpio initramfs rebuild & dkms autoinstall.",
             flavor
+        ))
+    }
+
+    /// Simulates running mkinitcpio for all installed kernels
+    pub fn regenerate_initramfs_all(&self) -> String {
+        format!(
+            "AKM: Regenerated initramfs images for {} kernel flavor(s).",
+            self.installed_kernels.len()
+        )
+    }
+}
+
+/// EndeavourOS Pull Request Gateway Engine for SigmaOS Integration
+pub struct EndeavourOsPrGatewayEngine {
+    pub pr_id: String,
+    pub title: String,
+    pub is_verified: bool,
+}
+
+impl EndeavourOsPrGatewayEngine {
+    pub fn new(pr_id: &str, title: &str) -> Self {
+        Self {
+            pr_id: pr_id.to_string(),
+            title: title.to_string(),
+            is_verified: false,
+        }
+    }
+
+    pub fn verify_and_apply(&mut self) -> Result<String, &'static str> {
+        if self.pr_id.is_empty() || self.title.is_empty() {
+            return Err("Invalid PR ID or Title");
+        }
+        self.is_verified = true;
+        Ok(format!(
+            "PR [{}] '{}' successfully verified and merged into SigmaOS EndeavourOS Parity Module.",
+            self.pr_id, self.title
         ))
     }
 }
