@@ -1184,6 +1184,21 @@ if [ -f "src/distro/arch_linux_github_repo_components_pr_engine.rs" ]; then
     rustc --test src/distro/arch_linux_github_repo_components_pr_engine.rs --edition=2021 -o build/test_arch_github_repo_components
     ./build/test_arch_github_repo_components
 fi
+
+if [ -f "src/distro/arch_linux_github_repo_inspirations_pr.rs" ]; then
+    echo "Running Arch Linux GitHub Repo Inspirations PR Engine test suite..."
+    mkdir -p build
+    rustc --test src/distro/arch_linux_github_repo_inspirations_pr.rs --edition=2021 -o build/test_arch_github_repo_inspirations
+    ./build/test_arch_github_repo_inspirations
+fi
+
+if [ -f "tests/arch_github_repo_inspirations_tests.rs" ]; then
+    echo "Running Arch Linux GitHub Repo Inspirations Integration test suite..."
+    mkdir -p build
+    rustc --crate-type=lib --edition=2021 src/distro/arch_linux_github_repo_inspirations_pr.rs --crate-name arch_inspirations_lib --out-dir build
+    rustc --test tests/arch_github_repo_inspirations_tests.rs --edition=2021 --extern arch_inspirations_lib=build/libarch_inspirations_lib.rlib --crate-name arch_github_tests -o build/test_arch_github_repo_inspirations_tests
+    ./build/test_arch_github_repo_inspirations_tests
+fi
 if [ -f "src/distro/sovereign_open_source_os_fedora_github_pr_suite.rs" ]; then
     echo "Running Sovereign Open Source OS Fedora GitHub PR Suite test suite..."
     mkdir -p build
