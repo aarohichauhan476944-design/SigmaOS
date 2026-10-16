@@ -180,6 +180,13 @@ if [ -f "src/distro/sovereign_2090_distro_supremacy_engine.rs" ]; then
     ./build/test_2090_supremacy
 fi
 
+if [ -f "src/distro/endeavour_os.rs" ]; then
+    echo "Running EndeavourOS parity & tooling test suite..."
+    mkdir -p build
+    rustc --test src/distro/endeavour_os.rs --edition=2021 -o build/endeavour_os_test
+    ./build/endeavour_os_test
+fi
+
 if [ -f "src/distro/sovereign_arch_gap_closure_pr_engine.rs" ]; then
     echo "Running Sovereign Arch Gap Closure PR test suite..."
     mkdir -p build
