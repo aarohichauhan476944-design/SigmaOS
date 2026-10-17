@@ -150,6 +150,8 @@ pub mod sovereign_distro_package_innovations;
 pub mod sovereign_distro_package_master_suite;
 pub mod sovereign_distro_package_matrix_expansion;
 pub mod transaction_journal;
+pub mod sovereign_gentoo_linux_parity_pr;
+pub use sovereign_gentoo_linux_parity_pr::*;
 pub mod universal_pr_execution_engine;
 
 pub use crate::sigpkg::{
