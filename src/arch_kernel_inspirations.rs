@@ -498,6 +498,15 @@ impl SecurityAdvisoryTracker {
     pub fn critical_count(&self) -> usize {
         self.by_severity(AdvisorySeverity::Critical).len()
     }
+
+    /// Total sum of CVSS risk scores for active vulnerable advisories
+    pub fn calculate_total_risk_score(&self) -> u32 {
+        self.advisories
+            .iter()
+            .filter(|a| a.status == AdvisoryStatus::Vulnerable)
+            .map(|a| a.cvss_score)
+            .sum()
+    }
 }
 
 impl Default for SecurityAdvisoryTracker {
@@ -582,10 +591,26 @@ impl SignstarService {
         self.all_mandatory_signed() && total_signed >= self.threshold_signers_count
     }
 
-    pub fn add_signer(&mut self, id: &str, policy: SignerPolicy) {
+    pub fn with_quorum_threshold(mut self, threshold: usize) -> Self {
+        self.quorum_threshold = threshold;
+        self
+    }
+
+    pub fn add_signer(&mut self, id: &str, policy: SignerPolicy, key: SigningKey) {
         self.signers.push(Signer {
             id: id.to_string(),
-            key: SigningKey {
+            key,
+            policy,
+            signed: false,
+            signature_timestamp: 0,
+        });
+    }
+
+    pub fn add_signer_default(&mut self, id: &str, policy: SignerPolicy) {
+        self.add_signer(
+            id,
+            policy,
+            SigningKey {
                 key_id: id.to_string(),
                 fingerprint: format!("fp_{}", id),
                 algorithm: SignatureAlgorithm::Ed25519,
@@ -593,10 +618,7 @@ impl SignstarService {
                 expires_at: 0,
                 is_revoked: false,
             },
-            policy,
-            signed: false,
-            signature_timestamp: 0,
-        });
+        );
     }
 
     /// Record that a signer has produced a valid signature at a specific timestamp.
@@ -990,6 +1012,20 @@ pub enum ReproducibleStatus {
     NotBuilt,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DiscrepancyKind {
+    SizeMismatch,
+    HeaderMismatch,
+    ContentMismatch,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AuditReport {
+    pub package: String,
+    pub discrepancies: Vec<DiscrepancyKind>,
+    pub status: ReproducibleStatus,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReproducibleBuildRecord {
     pub package: String,
@@ -1001,13 +1037,39 @@ pub struct ReproducibleBuildRecord {
 
 pub struct ReproducibleBuildVerdict {
     pub records: Vec<ReproducibleBuildRecord>,
+    pub audit_reports: Vec<AuditReport>,
 }
 
 impl ReproducibleBuildVerdict {
     pub fn new() -> Self {
         Self {
             records: Vec::new(),
+            audit_reports: Vec::new(),
         }
+    }
+
+    pub fn compare_build_artifacts(&mut self, package: &str, bin_a: &[u8], bin_b: &[u8]) -> ReproducibleStatus {
+        let mut discrepancies = Vec::new();
+        if bin_a.len() != bin_b.len() {
+            discrepancies.push(DiscrepancyKind::SizeMismatch);
+        } else if bin_a != bin_b {
+            discrepancies.push(DiscrepancyKind::ContentMismatch);
+        }
+
+        let status = if discrepancies.is_empty() {
+            ReproducibleStatus::Reproducible
+        } else {
+            ReproducibleStatus::Unreproducible
+        };
+
+        self.audit_reports.push(AuditReport {
+            package: package.to_string(),
+            discrepancies,
+            status,
+        });
+
+        self.record(package, status);
+        status
     }
 
     pub fn record(&mut self, package: &str, status: ReproducibleStatus) {
@@ -1159,9 +1221,9 @@ mod tests {
     #[test]
     fn signstar_threshold_signing_verification() {
         let mut signstar = SignstarService::new("core-package.pkg.tar.zst");
-        signstar.add_signer("arch-key-1", SignerPolicy::Mandatory);
-        signstar.add_signer("arch-key-2", SignerPolicy::Optional);
-        signstar.add_signer("arch-key-3", SignerPolicy::Optional);
+        signstar.add_signer_default("arch-key-1", SignerPolicy::Mandatory);
+        signstar.add_signer_default("arch-key-2", SignerPolicy::Optional);
+        signstar.add_signer_default("arch-key-3", SignerPolicy::Optional);
         signstar.set_threshold_count(2);
 
         signstar.record_signature("arch-key-1");
