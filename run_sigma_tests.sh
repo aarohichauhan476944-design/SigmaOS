@@ -1178,11 +1178,25 @@ if [ -f "src/distro/open_source_os_unimplemented_ideas_pr_gateway.rs" ]; then
     ./build/test_os_ideas_gateway
 fi
 
+if [ -f "src/arch_kernel_inspirations.rs" ]; then
+    echo "Running Arch Linux & Linux Kernel Inspirations test suite..."
+    mkdir -p build
+    rustc --test src/arch_kernel_inspirations.rs --edition=2021 -o build/test_arch_kernel
+    ./build/test_arch_kernel
+fi
+
 if [ -f "src/distro/arch_linux_github_repo_components_pr_engine.rs" ]; then
     echo "Running Arch Linux GitHub Repo Components PR Engine test suite..."
     mkdir -p build
     rustc --test src/distro/arch_linux_github_repo_components_pr_engine.rs --edition=2021 -o build/test_arch_github_repo_components
     ./build/test_arch_github_repo_components
+fi
+
+if [ -f "src/distro/arch_linux_missing_components_v52_pr.rs" ]; then
+    echo "Running Arch Linux Missing Components V52 PR Suite..."
+    mkdir -p build
+    rustc --test src/distro/arch_linux_missing_components_v52_pr.rs --edition=2021 --cfg 'feature="standalone_test"' -o build/test_arch_v52
+    ./build/test_arch_v52
 fi
 if [ -f "src/distro/sovereign_open_source_os_fedora_github_pr_suite.rs" ]; then
     echo "Running Sovereign Open Source OS Fedora GitHub PR Suite test suite..."
