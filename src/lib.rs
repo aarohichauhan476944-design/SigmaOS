@@ -114,6 +114,8 @@ pub use process::{
     SovereignProcessManager, SovereignProcessState, WaitStatus, ZeroCopyIpcChannel, WCONTINUED,
     WNOHANG, WUNTRACED,
 };
+pub mod arch_kernel_inspirations;
+pub use arch_kernel_inspirations::*;
 pub mod linuxmint_inspirations;
 pub use linuxmint_inspirations::{
     AppTheme, BackupFileEntry, BulkyRenamer, CaptainInstaller, CaptainSource, CatalogPackage,
