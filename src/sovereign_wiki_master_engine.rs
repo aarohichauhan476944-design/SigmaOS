@@ -1,24 +1,24 @@
-extern crate alloc;
 // SPDX-License-Identifier: MIT
 // Sovereign OS Wiki & Documentation Master Absorption Engine
 // Absorbs and implements all unimplemented ideas, specifications, roadmaps, and gap-closing matrices
 // from `.md` files and GitHub Wiki of SigmaOS / SovereignOS.
 
+extern crate alloc;
+
 use alloc::collections::BTreeMap;
 use alloc::format;
 use alloc::string::{String, ToString};
-use alloc::vec;
 use alloc::vec::Vec;
-
-/// ---------------------------------------------------------------------------
-/// 0. Master Wiki & Roadmap Verification Suite Declarations
-/// ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FeatureSourceType {
     GithubWikiPage,
     DistroRoadmapSpec,
     ArticleIdea,
+    ArchitectureDocument,
+    DistroGapMatrix,
+    CoreArchitectureDoc,
+    SovereignArchitectureDoc,
 }
 
 #[derive(Debug, Clone)]
@@ -30,35 +30,6 @@ pub struct RoadmapFeatureIdea {
     pub target_module: String,
     pub is_fully_implemented: bool,
 }
-
-#[derive(Debug)]
-pub struct MasterWikiAndRoadmapVerificationSuite {
-    pub ideas: Vec<RoadmapFeatureIdea>,
-}
-
-impl MasterWikiAndRoadmapVerificationSuite {
-    pub fn new() -> Self {
-        Self { ideas: Vec::new() }
-    }
-
-    pub fn health_check(&self) -> bool {
-        true
-    }
-
-    pub fn summary_report(&self) -> String {
-        "Parity Verification: 100.0%".to_string()
-    }
-}
-
-impl Default for MasterWikiAndRoadmapVerificationSuite {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// ---------------------------------------------------------------------------
-/// 1. 100 Improvement Ideas Evaluator (Sovereign OS Ultra Spec)
-/// ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum IdeaCategory {
@@ -74,23 +45,6 @@ pub enum IdeaCategory {
     FuturisticAndAiInnovations,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum FeatureSourceType {
-    GithubWikiPage,
-    DistroRoadmapSpec,
-    ArchitectureDocument,
-}
-
-#[derive(Debug, Clone)]
-pub struct RoadmapFeatureIdea {
-    pub idea_id: u32,
-    pub title: String,
-    pub source_type: FeatureSourceType,
-    pub source_file: String,
-    pub target_module: String,
-    pub is_fully_implemented: bool,
-}
-
 #[derive(Debug, Clone)]
 pub struct ImprovementIdeaRecord {
     pub id: u32,
@@ -99,23 +53,6 @@ pub struct ImprovementIdeaRecord {
     pub legacy_counterparts: String,
     pub implementation_module: String,
     pub is_fulfilled: bool,
-}
-
-#[derive(Debug, Default)]
-pub struct MasterWikiAndRoadmapVerificationSuite;
-
-impl MasterWikiAndRoadmapVerificationSuite {
-    pub fn new() -> Self {
-        Self
-    }
-
-    pub fn health_check(&self) -> bool {
-        true
-    }
-
-    pub fn summary_report(&self) -> String {
-        "Parity Verification: 100.0%".to_string()
-    }
 }
 
 #[derive(Debug)]
@@ -133,7 +70,6 @@ impl Sovereign100IdeasSuite {
     }
 
     fn populate_all_100_ideas(&mut self) {
-        // Multimedia Tools (1-10)
         self.ideas.push(ImprovementIdeaRecord {
             id: 1,
             name: "Native Video Editor (timeline + effects)".to_string(),
@@ -158,8 +94,6 @@ impl Sovereign100IdeasSuite {
             implementation_module: "src/audio/editor.rs".to_string(),
             is_fulfilled: true,
         });
-
-        // System Utilities (11-23)
         self.ideas.push(ImprovementIdeaRecord {
             id: 11,
             name: "Smart Temporary File & Cache Cleaner".to_string(),
@@ -184,8 +118,6 @@ impl Sovereign100IdeasSuite {
             implementation_module: "src/system/duplicate.rs".to_string(),
             is_fulfilled: true,
         });
-
-        // Package & App Management (24-33)
         self.ideas.push(ImprovementIdeaRecord {
             id: 24,
             name: "SigmaPkg Universal Package Manager & Cross-Translator".to_string(),
@@ -210,8 +142,6 @@ impl Sovereign100IdeasSuite {
             implementation_module: "src/tools/sigma_cli.rs".to_string(),
             is_fulfilled: true,
         });
-
-        // Security & Privacy (34-45)
         self.ideas.push(ImprovementIdeaRecord {
             id: 34,
             name: "Zero-Trust TPM Boot & PQC Micro-Domain Isolation".to_string(),
@@ -228,8 +158,6 @@ impl Sovereign100IdeasSuite {
             implementation_module: "src/security/bsd_hardening.rs".to_string(),
             is_fulfilled: true,
         });
-
-        // Compliance & Governance (46-100)
         self.ideas.push(ImprovementIdeaRecord {
             id: 100,
             name: "Statutory Compliance Audit Ledger & Sovereign Supreme Court Charter".to_string(),
@@ -254,52 +182,6 @@ impl Default for Sovereign100IdeasSuite {
         Self::new()
     }
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum FeatureSourceType {
-    GithubWikiPage,
-    DistroRoadmapSpec,
-}
-
-#[derive(Debug, Clone)]
-pub struct RoadmapFeatureIdea {
-    pub idea_id: u32,
-    pub title: String,
-    pub source_type: FeatureSourceType,
-    pub source_file: String,
-    pub target_module: String,
-    pub is_fully_implemented: bool,
-}
-
-pub struct MasterWikiAndRoadmapVerificationSuite {
-    pub master_engine: SovereignWikiMasterEngine,
-}
-
-impl MasterWikiAndRoadmapVerificationSuite {
-    pub fn new() -> Self {
-        Self {
-            master_engine: SovereignWikiMasterEngine::new(),
-        }
-    }
-
-    pub fn health_check(&self) -> bool {
-        self.master_engine.evaluate_master_wiki_fulfillment()
-    }
-
-    pub fn summary_report(&self) -> String {
-        "Parity Verification: 100.0%".to_string()
-    }
-}
-
-impl Default for MasterWikiAndRoadmapVerificationSuite {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// ---------------------------------------------------------------------------
-/// 2. Twelve Sovereign Native System Shards (`S-SHARDS`) Engine
-/// ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SovereignShardId {
@@ -482,10 +364,6 @@ impl Default for SovereignShardsMasterRegistry {
     }
 }
 
-/// ---------------------------------------------------------------------------
-/// 3. Linux & BSD Distro Gap Closing Parity Engine
-/// ---------------------------------------------------------------------------
-
 #[derive(Debug, Clone)]
 pub struct DistroGapFeatureRecord {
     pub distro_name: &'static str,
@@ -508,7 +386,6 @@ impl SovereignDistroGapClosureEngine {
     }
 
     fn register_distro_gaps(&mut self) {
-        // Arch Linux Parity
         self.features.push(DistroGapFeatureRecord {
             distro_name: "Arch Linux",
             gap_feature_name: "Signstar Signing Protocol & YubiHSM Hardware Security",
@@ -521,56 +398,42 @@ impl SovereignDistroGapClosureEngine {
             sigma_counterpart: "ArchPacmanContribEngine",
             verification_passed: true,
         });
-
-        // Debian & Ubuntu Parity
         self.features.push(DistroGapFeatureRecord {
             distro_name: "Debian/Ubuntu",
             gap_feature_name: "dpkg triggers, debconf preseed, PPA pinning",
             sigma_counterpart: "DebianDebconfStatoverrideEngine & AptPinRule",
             verification_passed: true,
         });
-
-        // Fedora & RedHat Parity
         self.features.push(DistroGapFeatureRecord {
             distro_name: "Fedora/RHEL",
             gap_feature_name: "Anitya release monitoring, Countme telemetry, DNF5 advisory",
             sigma_counterpart: "FedoraDnf5AdvisoryAndDeltaRpmEngine & CountmeTelemetry",
             verification_passed: true,
         });
-
-        // Gentoo Parity
         self.features.push(DistroGapFeatureRecord {
             distro_name: "Gentoo Linux",
             gap_feature_name: "Portage USE flags, subslot dependencies, ebuild CFLAGS tuner",
             sigma_counterpart: "GentooPortageSubslotAndUseExpandEngine & PortageCompilerTuner",
             verification_passed: true,
         });
-
-        // FreeBSD Parity
         self.features.push(DistroGapFeatureRecord {
             distro_name: "FreeBSD",
             gap_feature_name: "Jails VNET virtualization, Capsicum capability delegates, Poudriere",
             sigma_counterpart: "FreeBsdJailSandboxEngine & CapsicumDescriptorDelegate",
             verification_passed: true,
         });
-
-        // OpenBSD Parity
         self.features.push(DistroGapFeatureRecord {
             distro_name: "OpenBSD",
             gap_feature_name: "Pledge, Unveil, KARL kernel randomization, Signify PKG verification",
             sigma_counterpart: "OpenBsdPledge & OpenBsdPkgAddSignifyEngine",
             verification_passed: true,
         });
-
-        // Void & Alpine Parity
         self.features.push(DistroGapFeatureRecord {
             distro_name: "Void / Alpine",
             gap_feature_name: "Runit stage supervisor, Musl APK world, Soname orphan tracking",
             sigma_counterpart: "VoidXbpsSonameAndOrphanEngine & AlpineApkWorldEngine",
             verification_passed: true,
         });
-
-        // Linux Mint Parity
         self.features.push(DistroGapFeatureRecord {
             distro_name: "Linux Mint",
             gap_feature_name: "Bulky batch renamer, webapp-manager profile isolation, MDM greeter",
@@ -588,27 +451,6 @@ impl Default for SovereignDistroGapClosureEngine {
     fn default() -> Self {
         Self::new()
     }
-}
-
-/// ---------------------------------------------------------------------------
-/// 4. Roadmap Feature Parity Verification Structs
-/// ---------------------------------------------------------------------------
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum FeatureSourceType {
-    GithubWikiPage,
-    DistroRoadmapSpec,
-    SovereignArchitectureDoc,
-}
-
-#[derive(Debug, Clone)]
-pub struct RoadmapFeatureIdea {
-    pub idea_id: u32,
-    pub title: String,
-    pub source_type: FeatureSourceType,
-    pub source_file: String,
-    pub target_module: String,
-    pub is_fully_implemented: bool,
 }
 
 #[derive(Debug)]
@@ -670,66 +512,12 @@ impl Default for WikiSpecificationDataSyncer {
     }
 }
 
-#[derive(Debug)]
-pub struct MasterWikiAndRoadmapVerificationSuite {
-    pub parity_engine: SovereignLinuxBsdWikiRoadmapParityEngine,
-    pub syncer: WikiSpecificationDataSyncer,
-}
-
-impl MasterWikiAndRoadmapVerificationSuite {
-    pub fn new() -> Self {
-        Self {
-            parity_engine: SovereignLinuxBsdWikiRoadmapParityEngine::new(),
-            syncer: WikiSpecificationDataSyncer::new(),
-        }
-    }
-
-    pub fn health_check(&self) -> bool {
-        self.parity_engine.verify_100_percent_parity()
-    }
-
-    pub fn summary_report(&self) -> String {
-        format!(
-            "Master Wiki & Roadmap Verification Report:\n- Synced Specs: {}\n- Parity Verification: 100.0%",
-            self.syncer.total_synced_specs
-        )
-    }
-}
-
-impl Default for MasterWikiAndRoadmapVerificationSuite {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// ---------------------------------------------------------------------------
-/// 5. Master Sovereign OS Documentation & Wiki Integration Verification Engine
-/// ---------------------------------------------------------------------------
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum FeatureSourceType {
-    GithubWikiPage,
-    DistroRoadmapSpec,
-    ArchitectureDocument,
-    DistroGapMatrix,
-    CoreArchitectureDoc,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RoadmapFeatureIdea {
-    pub idea_id: u32,
-    pub title: String,
-    pub source_type: FeatureSourceType,
-    pub source_file: String,
-    pub target_module: String,
-    pub is_fully_implemented: bool,
-}
-
 pub struct SovereignWikiMasterEngine {
     pub suite_100_ideas: Sovereign100IdeasSuite,
     pub shards_registry: SovereignShardsMasterRegistry,
     pub distro_gap_closure: SovereignDistroGapClosureEngine,
-    pub roadmap_verification: MasterWikiAndRoadmapVerificationSuite,
+    pub roadmap_verification: SovereignLinuxBsdWikiRoadmapParityEngine,
+    pub syncer: WikiSpecificationDataSyncer,
 }
 
 impl SovereignWikiMasterEngine {
@@ -738,7 +526,8 @@ impl SovereignWikiMasterEngine {
             suite_100_ideas: Sovereign100IdeasSuite::new(),
             shards_registry: SovereignShardsMasterRegistry::new(),
             distro_gap_closure: SovereignDistroGapClosureEngine::new(),
-            roadmap_verification: MasterWikiAndRoadmapVerificationSuite::new(),
+            roadmap_verification: SovereignLinuxBsdWikiRoadmapParityEngine::new(),
+            syncer: WikiSpecificationDataSyncer::new(),
         }
     }
 
@@ -746,7 +535,7 @@ impl SovereignWikiMasterEngine {
         let ideas_ok = self.suite_100_ideas.verify_full_fulfillment();
         let shards_ok = self.shards_registry.is_all_12_shards_active();
         let gap_closure_ok = self.distro_gap_closure.verify_all_gap_closures();
-        let roadmap_ok = self.roadmap_verification.health_check();
+        let roadmap_ok = self.roadmap_verification.verify_100_percent_parity();
 
         ideas_ok && shards_ok && gap_closure_ok && roadmap_ok
     }
