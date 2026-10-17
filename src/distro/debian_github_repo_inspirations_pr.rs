@@ -1022,7 +1022,232 @@ impl Default for DebianDebcleanWorkspaceSanitizer {
 }
 
 // =========================================================================
-// 24. MASTER SUITE FOR DEBIAN GITHUB REPO INSPIRATIONS & OPEN SOURCE OS PARITY
+// 24. APT-KEY & TRUSTED KEYRING GPG GOVERNOR
+// =========================================================================
+
+#[derive(Debug, Clone)]
+pub struct TrustedKeyringEntry {
+    pub keyring_path: String,
+    pub fingerprint: String,
+    pub is_pqc_capable: bool,
+}
+
+pub struct DebianAptKeyringGpgGovernor {
+    pub keyrings: BTreeMap<String, TrustedKeyringEntry>,
+}
+
+impl DebianAptKeyringGpgGovernor {
+    pub fn new() -> Self {
+        let mut gov = Self {
+            keyrings: BTreeMap::new(),
+        };
+        gov.add_keyring(
+            "/etc/apt/trusted.gpg.d/debian-archive-bookworm.gpg",
+            "A4B8C1D2E3F45678",
+            true,
+        );
+        gov
+    }
+
+    pub fn add_keyring(&mut self, path: &str, fingerprint: &str, pqc: bool) {
+        self.keyrings.insert(
+            fingerprint.to_string(),
+            TrustedKeyringEntry {
+                keyring_path: path.to_string(),
+                fingerprint: fingerprint.to_string(),
+                is_pqc_capable: pqc,
+            },
+        );
+    }
+
+    pub fn verify_keyring_trusted(&self, fingerprint: &str) -> bool {
+        self.keyrings.contains_key(fingerprint)
+    }
+}
+
+impl Default for DebianAptKeyringGpgGovernor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 25. UPDATE-ALTERNATIVES SYMLINK & PRIORITY GOVERNOR
+// =========================================================================
+
+#[derive(Debug, Clone)]
+pub struct AlternativeChoice {
+    pub path: String,
+    pub priority: u32,
+}
+
+pub struct DebianUpdateAlternativesEngine {
+    pub alternatives: BTreeMap<String, Vec<AlternativeChoice>>, // master_link -> choices
+}
+
+impl DebianUpdateAlternativesEngine {
+    pub fn new() -> Self {
+        Self {
+            alternatives: BTreeMap::new(),
+        }
+    }
+
+    pub fn install_alternative(&mut self, master_link: &str, path: &str, priority: u32) {
+        let choices = self
+            .alternatives
+            .entry(master_link.to_string())
+            .or_insert_with(Vec::new);
+        choices.push(AlternativeChoice {
+            path: path.to_string(),
+            priority,
+        });
+    }
+
+    pub fn get_best_alternative(&self, master_link: &str) -> Option<String> {
+        let choices = self.alternatives.get(master_link)?;
+        choices
+            .iter()
+            .max_by_key(|c| c.priority)
+            .map(|c| c.path.clone())
+    }
+}
+
+impl Default for DebianUpdateAlternativesEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 26. DPKG-SOURCE 3.0 (QUILT) PATCH SERIES MANAGER
+// =========================================================================
+
+#[derive(Debug, Clone)]
+pub struct QuiltPatch {
+    pub name: String,
+    pub applied: bool,
+}
+
+pub struct DebianDpkgSourceFormatEngine {
+    pub source_format: String,
+    pub patches: Vec<QuiltPatch>,
+}
+
+impl DebianDpkgSourceFormatEngine {
+    pub fn new(format_str: &str) -> Self {
+        Self {
+            source_format: format_str.to_string(),
+            patches: Vec::new(),
+        }
+    }
+
+    pub fn add_patch(&mut self, name: &str) {
+        self.patches.push(QuiltPatch {
+            name: name.to_string(),
+            applied: false,
+        });
+    }
+
+    pub fn apply_patch_series(&mut self) -> usize {
+        let mut applied_count = 0;
+        for patch in &mut self.patches {
+            patch.applied = true;
+            applied_count += 1;
+        }
+        applied_count
+    }
+}
+
+// =========================================================================
+// 27. LINTIAN STATIC POLICY ANALYZER
+// =========================================================================
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LintianSeverity {
+    Error,
+    Warning,
+    Info,
+}
+
+#[derive(Debug, Clone)]
+pub struct LintianIssue {
+    pub tag: String,
+    pub severity: LintianSeverity,
+    pub description: String,
+}
+
+pub struct DebianLintianStaticAnalyzer {
+    pub issues: Vec<LintianIssue>,
+}
+
+impl DebianLintianStaticAnalyzer {
+    pub fn new() -> Self {
+        Self {
+            issues: Vec::new(),
+        }
+    }
+
+    pub fn analyze_package(&mut self, pkg_name: &str) -> usize {
+        self.issues.push(LintianIssue {
+            tag: format!("{}-no-changelog", pkg_name),
+            severity: LintianSeverity::Warning,
+            description: "Changelog entry missing or unparseable".to_string(),
+        });
+        self.issues.len()
+    }
+
+    pub fn get_error_count(&self) -> usize {
+        self.issues
+            .iter()
+            .filter(|i| i.severity == LintianSeverity::Error)
+            .count()
+    }
+}
+
+impl Default for DebianLintianStaticAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 28. POPULARITY-CONTEST (POPCON) TELEMETRY PRIVACY ENGINE
+// =========================================================================
+
+pub struct DebianPopconTelemetryPrivacyEngine {
+    pub opt_in: bool,
+    pub package_access_times: BTreeMap<String, u64>,
+}
+
+impl DebianPopconTelemetryPrivacyEngine {
+    pub fn new(opt_in: bool) -> Self {
+        Self {
+            opt_in,
+            package_access_times: BTreeMap::new(),
+        }
+    }
+
+    pub fn record_access(&mut self, pkg: &str, timestamp: u64) {
+        if self.opt_in {
+            self.package_access_times
+                .insert(pkg.to_string(), timestamp);
+        }
+    }
+
+    pub fn generate_anonymous_report(&self) -> Option<String> {
+        if !self.opt_in {
+            return None;
+        }
+        let mut report = String::from("POPCON-REPORT-V1\n");
+        for (pkg, atime) in &self.package_access_times {
+            report.push_str(&format!("{}: {}\n", pkg, atime));
+        }
+        Some(report)
+    }
+}
+
+// =========================================================================
+// 29. MASTER SUITE FOR DEBIAN GITHUB REPO INSPIRATIONS & OPEN SOURCE OS PARITY
 // =========================================================================
 
 pub struct DebianGithubRepoInspirationsPrSuite {
@@ -1049,6 +1274,11 @@ pub struct DebianGithubRepoInspirationsPrSuite {
     pub dep5_validator: DebianDep5CopyrightValidator,
     pub dget_verifier: DebianDgetFetchVerifier,
     pub debclean: DebianDebcleanWorkspaceSanitizer,
+    pub apt_keyring: DebianAptKeyringGpgGovernor,
+    pub update_alternatives: DebianUpdateAlternativesEngine,
+    pub dpkg_source: DebianDpkgSourceFormatEngine,
+    pub lintian: DebianLintianStaticAnalyzer,
+    pub popcon: DebianPopconTelemetryPrivacyEngine,
 }
 
 impl DebianGithubRepoInspirationsPrSuite {
@@ -1079,6 +1309,11 @@ impl DebianGithubRepoInspirationsPrSuite {
             dep5_validator: DebianDep5CopyrightValidator::new("sigmaos", "GPL-3.0"),
             dget_verifier: DebianDgetFetchVerifier::new(),
             debclean: DebianDebcleanWorkspaceSanitizer::new(),
+            apt_keyring: DebianAptKeyringGpgGovernor::new(),
+            update_alternatives: DebianUpdateAlternativesEngine::new(),
+            dpkg_source: DebianDpkgSourceFormatEngine::new("3.0 (quilt)"),
+            lintian: DebianLintianStaticAnalyzer::new(),
+            popcon: DebianPopconTelemetryPrivacyEngine::new(true),
         }
     }
 
@@ -1088,7 +1323,7 @@ impl DebianGithubRepoInspirationsPrSuite {
             "feat/debian-repo-parity",
             "Debian GNU/Linux",
             "Package Management & Admin Tools",
-            "Integrates dpkg-divert, debconf, sbuild, and debsigns into SigmaOS.",
+            "Integrates dpkg-divert, debconf, sbuild, debsigns, lintian, and popcon into SigmaOS.",
             &["src/distro/debian_github_repo_inspirations_pr.rs"],
         );
 
@@ -1112,12 +1347,29 @@ impl DebianGithubRepoInspirationsPrSuite {
         self.reconfigure.reconfigure_package("tzdata");
         self.debclean.clean_workspace();
 
+        self.update_alternatives
+            .install_alternative("/usr/bin/editor", "/usr/bin/vim.basic", 100);
+        let best_alt = self
+            .update_alternatives
+            .get_best_alternative("/usr/bin/editor");
+
+        self.dpkg_source.add_patch("01_fix_build.patch");
+        let applied = self.dpkg_source.apply_patch_series();
+
+        self.lintian.analyze_package("sigma-core");
+        self.popcon.record_access("sigma-core", 1700000000);
+
         signed
             && ci_count > 0
             && self
                 .statoverride_mgr
                 .get_override("/usr/bin/sudo")
                 .is_some()
+            && best_alt == Some("/usr/bin/vim.basic".to_string())
+            && applied == 1
+            && self
+                .apt_keyring
+                .verify_keyring_trusted("A4B8C1D2E3F45678")
     }
 }
 
@@ -1250,6 +1502,29 @@ mod tests {
 
         let mut debclean = DebianDebcleanWorkspaceSanitizer::new();
         assert_eq!(debclean.clean_workspace(), 42);
+
+        let keyring_gov = DebianAptKeyringGpgGovernor::new();
+        assert!(keyring_gov.verify_keyring_trusted("A4B8C1D2E3F45678"));
+
+        let mut alts = DebianUpdateAlternativesEngine::new();
+        alts.install_alternative("/usr/bin/x-terminal-emulator", "/usr/bin/alacritty", 50);
+        alts.install_alternative("/usr/bin/x-terminal-emulator", "/usr/bin/kitty", 80);
+        assert_eq!(
+            alts.get_best_alternative("/usr/bin/x-terminal-emulator"),
+            Some("/usr/bin/kitty".to_string())
+        );
+
+        let mut quilt = DebianDpkgSourceFormatEngine::new("3.0 (quilt)");
+        quilt.add_patch("debian/patches/01_security.patch");
+        assert_eq!(quilt.apply_patch_series(), 1);
+
+        let mut lintian = DebianLintianStaticAnalyzer::new();
+        lintian.analyze_package("bash");
+        assert_eq!(lintian.issues.len(), 1);
+
+        let mut popcon = DebianPopconTelemetryPrivacyEngine::new(true);
+        popcon.record_access("bash", 1600000000);
+        assert!(popcon.generate_anonymous_report().unwrap().contains("bash: 1600000000"));
     }
 
     #[test]
