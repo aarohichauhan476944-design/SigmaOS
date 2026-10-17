@@ -367,3 +367,17 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.fedora_rpm_engine]
+status = "unit-tested"
+files = ["src/sigpkg/fedora_rpm_engine.rs"]
+description = "Fedora/RPM Compatibility Engine with SPEC parser, DNF repo manager, RPM database, dependency resolver, Anitya release monitoring with messaging bus, and MirrorManager2 metalink XML generator"
+test_evidence = "Unit tests pass via rustc --test src/sigpkg/fedora_rpm_engine.rs (8 passed)"
+next_milestone = "Kernel package subsystem and RPM transaction execution"
+
+[distro.fedora_github_repo_inspirations_pr]
+status = "unit-tested"
+files = ["src/distro/fedora_github_repo_inspirations_pr.rs"]
+description = "Fedora Linux GitHub Repo Inspirations Engine providing Ignition first-boot provisioning, Silverblue Bootc OCI deployment with auto-rollback, DNF5 comps group and advisory solver, Toolbx developer sandbox, and Koji/Bodhi build karma gating"
+test_evidence = "Unit tests pass via rustc --test src/distro/fedora_github_repo_inspirations_pr.rs (6 passed)"
+next_milestone = "Connect Ignition first-boot provisoning to initial kernel init boot sequence"

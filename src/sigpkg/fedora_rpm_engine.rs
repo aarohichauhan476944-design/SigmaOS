@@ -578,7 +578,6 @@ gpgcheck=1
         assert!(deps.contains(&"dep-pkg".to_string()));
     }
 
-    #[ignore]
     #[test]
     fn test_fedora_anitya_release_monitoring() {
         let mut engine = FedoraAnityaReleaseMonitoringEngine::new();
@@ -830,6 +829,26 @@ impl FedoraAnityaReleaseMonitoringEngine {
             let proj_name = record.name.clone();
             record.latest_upstream_version = latest_version.to_string();
             record.updated_available = is_new;
+            if is_new {
+                self.messaging_bus.publish_version_update(
+                    proj_id,
+                    &proj_name,
+                    "SigmaOS/Fedora",
+                    &old_ver,
+                    latest_version,
+                    vec![
+                        AnityaPackageMapping {
+                            distro: "Fedora".to_string(),
+                            package_name: proj_name.clone(),
+                        },
+                        AnityaPackageMapping {
+                            distro: "SigmaOS".to_string(),
+                            package_name: proj_name.clone(),
+                        },
+                    ],
+                    0,
+                );
+            }
             Some(is_new)
         } else {
             None
