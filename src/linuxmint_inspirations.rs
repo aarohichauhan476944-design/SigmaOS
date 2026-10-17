@@ -82,6 +82,7 @@ pub struct LanWarpEngine {
     pub peers: Vec<LanPeer>,
     pub incoming_auto_approve: bool,
     pub compression_enabled: bool,
+    pub transfer_speed_limit_kbps: Option<u32>,
 }
 
 impl LanWarpEngine {
@@ -95,7 +96,12 @@ impl LanWarpEngine {
             peers: Vec::new(),
             incoming_auto_approve: false,
             compression_enabled: false,
+            transfer_speed_limit_kbps: None,
         }
+    }
+
+    pub fn set_speed_limit(&mut self, limit_kbps: Option<u32>) {
+        self.transfer_speed_limit_kbps = limit_kbps;
     }
 
     /// Set a group code. Enabling secure mode (a unique code) also turns on
@@ -142,15 +148,21 @@ impl LanWarpEngine {
         if !self.peers.iter().any(|p| p.address == peer_address) {
             return TransferOutcome::Interrupted { bytes: 0 };
         }
-        if self.compression_enabled {
+        let mut bytes = if self.compression_enabled {
             // Compression reduces transfer size; modeled as a ratio.
-            let comp = payload.len().saturating_mul(85) / 100;
-            TransferOutcome::Completed { bytes: comp }
+            payload.len().saturating_mul(85) / 100
         } else {
-            TransferOutcome::Completed {
-                bytes: payload.len(),
+            payload.len()
+        };
+
+        if let Some(limit_kbps) = self.transfer_speed_limit_kbps {
+            let max_bytes_per_sec = (limit_kbps as usize) * 1024;
+            if bytes > max_bytes_per_sec {
+                bytes = max_bytes_per_sec;
             }
         }
+
+        TransferOutcome::Completed { bytes }
     }
 
     pub fn receive_file(&mut self, req: RequestIncoming) -> TransferOutcome {
@@ -373,6 +385,7 @@ pub struct MintUpgradeEngine {
     pub current_phase: MintUpgradePhase,
     pub preflight_passed: bool,
     pub packages_to_upgrade_count: usize,
+    pub kernel_update_protected: bool,
 }
 
 impl MintUpgradeEngine {
@@ -383,7 +396,12 @@ impl MintUpgradeEngine {
             current_phase: MintUpgradePhase::Idle,
             preflight_passed: false,
             packages_to_upgrade_count: 0,
+            kernel_update_protected: true,
         }
+    }
+
+    pub fn set_kernel_protection(&mut self, protected: bool) {
+        self.kernel_update_protected = protected;
     }
 
     /// Performs pre-flight checks (disk space, power supply, orphan PPA checks)
@@ -535,6 +553,8 @@ pub struct TvChannel {
     pub country: String,
     pub provider: String,
     pub url: String,
+    pub is_favorite: bool,
+    pub genre: String,
 }
 
 pub struct HypnotixIptvPlayer {
@@ -565,6 +585,7 @@ impl HypnotixIptvPlayer {
         for line in lines {
             let entries = line.split('#').collect::<Vec<&str>>();
             if entries.len() >= 2 {
+                let genre_tag = if entries.len() >= 3 { entries[2] } else { "General" };
                 self.channels.push(TvChannel {
                     id: entries[0].to_string(),
                     name: entries[0].to_string(),
@@ -575,10 +596,32 @@ impl HypnotixIptvPlayer {
                         .to_string(),
                     provider: provider.to_string(),
                     url: entries[0].to_string(),
+                    is_favorite: false,
+                    genre: genre_tag.to_string(),
                 });
             }
         }
         self.channels.len()
+    }
+
+    pub fn toggle_favorite(&mut self, channel_id: &str) -> bool {
+        if let Some(channel) = self.channels.iter_mut().find(|c| c.id == channel_id) {
+            channel.is_favorite = !channel.is_favorite;
+            channel.is_favorite
+        } else {
+            false
+        }
+    }
+
+    pub fn get_favorites(&self) -> Vec<&TvChannel> {
+        self.channels.iter().filter(|c| c.is_favorite).collect()
+    }
+
+    pub fn filter_by_genre(&self, genre: &str) -> Vec<&TvChannel> {
+        self.channels
+            .iter()
+            .filter(|c| contains_ignore_case(&c.genre, genre))
+            .collect()
     }
 
     pub fn channels_by_country(&self, country: &str) -> Vec<&TvChannel> {
@@ -617,6 +660,8 @@ pub enum RenameRule {
     LowerCase,
     UpperCase,
     TitleCase,
+    KebabCase,
+    CamelCase,
     TrimWhitespace,
     Sequence { start: u32, step: u32, width: usize },
     ChangeExtension { new_ext: String },
@@ -731,6 +776,8 @@ fn apply_rule(rule: &RenameRule, input: &str, seq: u32) -> String {
         RenameRule::LowerCase => input.to_lowercase(),
         RenameRule::UpperCase => input.to_uppercase(),
         RenameRule::TitleCase => to_title_case(input),
+        RenameRule::KebabCase => to_kebab_case(input),
+        RenameRule::CamelCase => to_camel_case(input),
         RenameRule::TrimWhitespace => input.trim().to_string(),
         RenameRule::Sequence { start, step, width } => {
             let n = start + seq * step;
@@ -803,6 +850,49 @@ fn to_title_case(s: &str) -> String {
             for lc in c.to_lowercase() {
                 result.push(lc);
             }
+        }
+    }
+
+    result
+}
+
+fn to_kebab_case(s: &str) -> String {
+    let mut result = String::new();
+    for (i, c) in s.chars().enumerate() {
+        if c.is_whitespace() || c == '_' {
+            result.push('-');
+        } else if c.is_uppercase() {
+            if i > 0 && !result.ends_with('-') {
+                result.push('-');
+            }
+            for lc in c.to_lowercase() {
+                result.push(lc);
+            }
+        } else {
+            result.push(c);
+        }
+    }
+    result
+}
+
+fn to_camel_case(s: &str) -> String {
+    let mut result = String::new();
+    let mut capitalize_next = false;
+
+    for (i, c) in s.chars().enumerate() {
+        if c.is_whitespace() || c == '_' || c == '-' {
+            capitalize_next = true;
+        } else if i == 0 {
+            for lc in c.to_lowercase() {
+                result.push(lc);
+            }
+        } else if capitalize_next {
+            for uc in c.to_uppercase() {
+                result.push(uc);
+            }
+            capitalize_next = false;
+        } else {
+            result.push(c);
         }
     }
 
@@ -1272,6 +1362,25 @@ impl StickyNotesManager {
             .iter()
             .filter(|n| n.category == category)
             .collect()
+    }
+
+    pub fn search_notes(&self, query: &str) -> Vec<&StickyNote> {
+        self.notes
+            .iter()
+            .filter(|n| contains_ignore_case(&n.title, query) || contains_ignore_case(&n.content, query))
+            .collect()
+    }
+
+    pub fn export_summary(&self) -> String {
+        let mut out = String::new();
+        out.push_str(&format!("Sticky Notes Total: {}\n", self.notes.len()));
+        for note in &self.notes {
+            out.push_str(&format!(
+                "[{}] {} - Category: {} (Pinned: {}, Locked: {})\n",
+                note.id, note.title, note.category, note.is_pinned, note.is_locked
+            ));
+        }
+        out
     }
 }
 
@@ -2396,6 +2505,87 @@ mod tests {
 
         let top = catalog.get_top_rated(2);
         assert_eq!(top.len(), 2);
+    }
+
+    #[test]
+    fn test_warp_bandwidth_throttling() {
+        let mut w = LanWarpEngine::default();
+        w.discover_peer("peer1", "192.168.1.5", DEFAULT_GROUP_CODE);
+        let payload = vec![0u8; 100 * 1024]; // 100 KB payload
+
+        let outcome1 = w.send_file("192.168.1.5", "test.dat", &payload);
+        if let TransferOutcome::Completed { bytes } = outcome1 {
+            assert_eq!(bytes, 100 * 1024);
+        } else {
+            panic!("Expected completed transfer");
+        }
+
+        w.set_speed_limit(Some(50)); // Limit to 50 KB/s
+        let outcome2 = w.send_file("192.168.1.5", "test.dat", &payload);
+        if let TransferOutcome::Completed { bytes } = outcome2 {
+            assert_eq!(bytes, 50 * 1024);
+        } else {
+            panic!("Expected throttled completed transfer");
+        }
+    }
+
+    #[test]
+    fn test_bulky_kebab_and_camel_case() {
+        let mut b = BulkyRenamer::new();
+        b.add_file("My Important Document.txt");
+        b.add_rule(RenameRule::KebabCase);
+
+        let preview = b.preview();
+        assert_eq!(preview[0].renamed, "my-important-document.txt");
+
+        let mut b2 = BulkyRenamer::new();
+        b2.add_file("my_important_document.txt");
+        b2.add_rule(RenameRule::CamelCase);
+
+        let preview2 = b2.preview();
+        assert_eq!(preview2[0].renamed, "myImportantDocument.txt");
+    }
+
+    #[test]
+    fn test_sticky_notes_search_and_export() {
+        let mut mgr = StickyNotesManager::new();
+        let id1 = mgr.create_note("Shopping", "Buy groceries and milk", "#ff0000");
+        let _id2 = mgr.create_note("Work", "Prepare Linux Mint PR", "#00ff00");
+
+        let search_res = mgr.search_notes("groceries");
+        assert_eq!(search_res.len(), 1);
+        assert_eq!(search_res[0].id, id1);
+
+        let summary = mgr.export_summary();
+        assert!(summary.contains("Sticky Notes Total: 2"));
+        assert!(summary.contains("Shopping"));
+        assert!(summary.contains("Work"));
+    }
+
+    #[test]
+    fn test_hypnotix_favorites_and_genre_filtering() {
+        let mut player = HypnotixIptvPlayer::new();
+        player.ingest_m3u("TestProv", &["chan1#US#News", "chan2#UK#Sports"]);
+
+        assert_eq!(player.channels.len(), 2);
+        assert!(player.toggle_favorite("chan1"));
+
+        let favs = player.get_favorites();
+        assert_eq!(favs.len(), 1);
+        assert_eq!(favs[0].id, "chan1");
+
+        let news_channels = player.filter_by_genre("news");
+        assert_eq!(news_channels.len(), 1);
+        assert_eq!(news_channels[0].id, "chan1");
+    }
+
+    #[test]
+    fn test_mint_upgrade_kernel_protection() {
+        let mut engine = MintUpgradeEngine::new("21.0", "22.0");
+        assert!(engine.kernel_update_protected);
+
+        engine.set_kernel_protection(false);
+        assert!(!engine.kernel_update_protected);
     }
 }
 
