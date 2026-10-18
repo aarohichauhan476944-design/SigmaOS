@@ -1276,4 +1276,11 @@ if [ -f "src/creative/deckcraft.rs" ]; then
     ./build/test_deckcraft
 fi
 
+if [ -f "src/distro/arch_linux_github_repo_inspirations_v52_pr.rs" ]; then
+    echo "Running Arch Linux GitHub Repo Inspirations Engine V52 test suite..."
+    mkdir -p build
+    rustc --test src/distro/arch_linux_github_repo_inspirations_v52_pr.rs --edition=2021 --cfg 'feature="standalone_test"' -o build/test_arch_github_repo_v52
+    ./build/test_arch_github_repo_v52
+fi
+
 echo "All SigmaOS test suites completed."
