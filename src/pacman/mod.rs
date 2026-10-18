@@ -2,9 +2,53 @@
 // SigmaOS Pacman-inspired Package Manager
 // Arch Linux pacman-inspired package management system
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::string::String;
 use std::vec::Vec;
+
+/// Pacman transaction hook timing type
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HookType {
+    PreTransaction,
+    PostTransaction,
+}
+
+/// Pacman transaction hook trigger condition
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HookTrigger {
+    Package(String),
+    File(String),
+    Any,
+}
+
+/// Pacman transaction hook definition (ALPM / Arch Linux hook format)
+#[derive(Debug, Clone, PartialEq)]
+pub struct PacmanHook {
+    pub name: String,
+    pub hook_type: HookType,
+    pub trigger: HookTrigger,
+    pub exec_command: String,
+}
+
+impl PacmanHook {
+    pub fn new(name: String, hook_type: HookType, trigger: HookTrigger, exec_command: String) -> Self {
+        Self {
+            name,
+            hook_type,
+            trigger,
+            exec_command,
+        }
+    }
+
+    /// Check if hook matches a package or file event
+    pub fn matches(&self, target_pkg: &str, files: &[String]) -> bool {
+        match &self.trigger {
+            HookTrigger::Any => true,
+            HookTrigger::Package(pkg) => pkg == target_pkg || pkg == "*",
+            HookTrigger::File(file_pattern) => files.iter().any(|f| f.contains(file_pattern)),
+        }
+    }
+}
 
 /// Pacman-inspired package information
 #[derive(Debug, Clone, PartialEq)]
@@ -172,6 +216,26 @@ impl PacmanDatabase {
     pub fn get_installed_size(&self, name: &str) -> Option<u64> {
         self.local_packages.get(name).map(|p| p.installed_size)
     }
+
+    /// Query orphan packages (pacman -Qtdq)
+    /// Packages installed as dependency that are no longer required by any installed package
+    pub fn get_orphans(&self) -> Vec<String> {
+        let mut required_deps = BTreeSet::new();
+
+        for (_name, pkg) in &self.local_packages {
+            for dep in &pkg.depends {
+                required_deps.insert(dep.as_str());
+            }
+        }
+
+        let mut orphans = Vec::new();
+        for (name, pkg) in &self.local_packages {
+            if pkg.install_reason == "dependency" && !required_deps.contains(name.as_str()) {
+                orphans.push(name.clone());
+            }
+        }
+        orphans
+    }
 }
 
 impl Default for PacmanDatabase {
@@ -184,6 +248,8 @@ impl Default for PacmanDatabase {
 #[derive(Debug, Clone)]
 pub struct PacmanPackageManager {
     pub database: PacmanDatabase,
+    pub hooks: Vec<PacmanHook>,
+    pub executed_hooks: Vec<String>,
     pub operation: String,
     pub noconfirm: bool,
     pub needed: bool,
@@ -198,6 +264,8 @@ impl PacmanPackageManager {
     pub fn new() -> Self {
         Self {
             database: PacmanDatabase::new(),
+            hooks: Vec::new(),
+            executed_hooks: Vec::new(),
             operation: String::new(),
             noconfirm: false,
             needed: false,
@@ -209,14 +277,32 @@ impl PacmanPackageManager {
         }
     }
 
+    /// Register a pacman hook
+    pub fn add_hook(&mut self, hook: PacmanHook) {
+        self.hooks.push(hook);
+    }
+
+    /// Execute matching transaction hooks
+    pub fn run_hooks(&mut self, hook_type: HookType, target_pkg: &str, files: &[String]) {
+        for hook in &self.hooks {
+            if hook.hook_type == hook_type && hook.matches(target_pkg, files) {
+                self.executed_hooks.push(format!("{}: {}", hook.name, hook.exec_command));
+            }
+        }
+    }
+
     /// Install package
     pub fn install(&mut self, package_name: &str) -> Result<(), &'static str> {
-        if let Some(pkg) = self.database.get_package(package_name) {
-            if self.database.is_installed(package_name) && self.needed {
-                return Err("Package already installed and --needed flag set");
-            }
+        if self.database.is_installed(package_name) && self.needed {
+            return Err("Package already installed and --needed flag set");
+        }
 
-            let mut local_pkg = pkg.clone();
+        let pkg = self.database.get_package(package_name).cloned();
+        if let Some(pkg) = pkg {
+            let files = pkg.files.clone();
+            self.run_hooks(HookType::PreTransaction, package_name, &files);
+
+            let mut local_pkg = pkg;
             local_pkg.install_date = format!(
                 "{}",
                 std::time::SystemTime::now()
@@ -231,6 +317,8 @@ impl PacmanPackageManager {
             };
 
             self.database.add_local_package(local_pkg);
+
+            self.run_hooks(HookType::PostTransaction, package_name, &files);
             Ok(())
         } else {
             Err("Package not found in database")
@@ -243,8 +331,39 @@ impl PacmanPackageManager {
             return Err("Package not installed");
         }
 
+        let files = self.database.get_local_package(package_name).map(|p| p.files.clone()).unwrap_or_default();
+        self.run_hooks(HookType::PreTransaction, package_name, &files);
+
         self.database.local_packages.remove(package_name);
+
+        self.run_hooks(HookType::PostTransaction, package_name, &files);
         Ok(())
+    }
+
+    /// Cascaded recursive package removal (pacman -Rns style)
+    pub fn remove_recursive(&mut self, package_name: &str) -> Result<Vec<String>, &'static str> {
+        if !self.database.is_installed(package_name) {
+            return Err("Package not installed");
+        }
+
+        let mut removed = Vec::new();
+        let target_deps = self.database.get_local_package(package_name).map(|p| p.depends.clone()).unwrap_or_default();
+
+        self.remove(package_name)?;
+        removed.push(String::from(package_name));
+
+        // Check each dependency to see if it became orphaned
+        for dep in target_deps {
+            if self.database.is_installed(&dep) {
+                let orphans = self.database.get_orphans();
+                if orphans.contains(&dep) {
+                    let _ = self.remove(&dep);
+                    removed.push(dep);
+                }
+            }
+        }
+
+        Ok(removed)
     }
 
     /// Update package
@@ -398,5 +517,55 @@ mod tests {
 
         let results = manager.search("doc");
         assert!(results.contains(&String::from("docker")));
+    }
+
+    #[test]
+    fn test_pacman_hooks() {
+        let mut manager = PacmanPackageManager::new();
+        let hook = PacmanHook::new(
+            String::from("glib-compile-schemas"),
+            HookType::PostTransaction,
+            HookTrigger::Package(String::from("glib2")),
+            String::from("/usr/bin/glib-compile-schemas /usr/share/glib-2.0/schemas"),
+        );
+        manager.add_hook(hook);
+
+        let mut pkg = PacmanPackage::new(String::from("glib2"), String::from("2.76.0"));
+        pkg.add_file(String::from("/usr/share/glib-2.0/schemas/gschemas.compiled"));
+        manager.database.add_package(pkg);
+
+        assert!(manager.install("glib2").is_ok());
+        assert_eq!(manager.executed_hooks.len(), 1);
+        assert!(manager.executed_hooks[0].contains("glib-compile-schemas"));
+    }
+
+    #[test]
+    fn test_pacman_orphans_and_recursive_remove() {
+        let mut manager = PacmanPackageManager::new();
+
+        let mut dep_pkg = PacmanPackage::new(String::from("libfoo"), String::from("1.0.0"));
+        dep_pkg.install_reason = String::from("dependency");
+        manager.database.add_package(dep_pkg.clone());
+
+        let mut main_pkg = PacmanPackage::new(String::from("foo-app"), String::from("2.0.0"));
+        main_pkg.add_dependency(String::from("libfoo"));
+        main_pkg.install_reason = String::from("explicit");
+        manager.database.add_package(main_pkg.clone());
+
+        // Install dependency as dependency, main as explicit
+        manager.set_asdeps(true);
+        assert!(manager.install("libfoo").is_ok());
+        manager.set_asdeps(false);
+        assert!(manager.install("foo-app").is_ok());
+
+        // Initially libfoo is required by foo-app, so no orphans
+        assert!(manager.database.get_orphans().is_empty());
+
+        // Recursively remove foo-app, should cascade remove libfoo
+        let removed = manager.remove_recursive("foo-app").unwrap();
+        assert!(removed.contains(&String::from("foo-app")));
+        assert!(removed.contains(&String::from("libfoo")));
+        assert!(!manager.database.is_installed("foo-app"));
+        assert!(!manager.database.is_installed("libfoo"));
     }
 }
