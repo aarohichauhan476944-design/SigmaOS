@@ -60,6 +60,8 @@ impl MintXAppCinnamonPrDeployer {
             ("nemo-file-manager", "feat(nemo): Nemo file manager bulk renamer, bookmarks, and action extensions", "nemo_desktop", 0x2A3B4C5D),
             ("xapps-library", "feat(xapps): XApp cross-desktop titlebar CSD, status icons, and thumbnailer service", "xapps_cross_de", 0x3B4C5D6E),
             ("muffin-compositor", "feat(muffin): Muffin Wayland/X11 window compositor & workspace grid manager", "muffin_compositor", 0x4C5D6E7F),
+            ("pix-image-organizer", "feat(pix): Pix image catalog organizer, album curation, and EXIF tagging engine", "pix_media", 0x51234567),
+            ("slick-greeter", "feat(slick-greeter): Slick-Greeter login manager slideshow background & avatar engine", "slick_greeter", 0x61234568),
         ];
 
         for (comp, title, target_sub, digest) in prs {
@@ -130,6 +132,18 @@ impl MintToolsWarpinatorPrDeployer {
                 "mint_backup",
                 0x7F8091A2,
             ),
+            (
+                "warpinator-security-qos",
+                "feat(warpinator): Warpinator PIN-code pairing, bandwidth throttling & QoS control",
+                "warpinator_qos",
+                0x71234569,
+            ),
+            (
+                "nemo-action-engine",
+                "feat(nemo): Nemo contextual action extensions, script runner & checksum engine",
+                "nemo_actions",
+                0x81234570,
+            ),
         ];
 
         for (comp, title, target_sub, digest) in prs {
@@ -184,6 +198,7 @@ impl MintUpdateSoftwareInstallPrDeployer {
         let prs = [
             ("mintupdate-manager", "feat(mintupdate): MintUpdate package safety classification levels (1-5) & kernel manager", "mint_update", 0x8091A2B3),
             ("mintinstall-store", "feat(mintinstall): MintInstall Flatpak & APT software manager catalog store", "mint_install", 0x91A2B3C4),
+            ("mintupdate-automation", "feat(mintupdate): MintUpdate Flatpak auto-prune & kernel hold policy automation", "mintupdate_auto", 0x91234571),
         ];
 
         for (comp, title, target_sub, digest) in prs {
@@ -241,7 +256,7 @@ impl MintMasterPrDeploymentSuite {
     }
 
     pub fn verify_complete_mint_pr_deployment(&self) -> bool {
-        self.compute_total_mint_pr_deployments() >= 9
+        self.compute_total_mint_pr_deployments() >= 14
     }
 }
 
@@ -259,19 +274,19 @@ mod tests {
     #[test]
     fn test_mint_pr_deployers() {
         let cinnamon = MintXAppCinnamonPrDeployer::new();
-        assert_eq!(cinnamon.get_merged_pr_count(), 4);
+        assert_eq!(cinnamon.get_merged_pr_count(), 6);
 
         let tools = MintToolsWarpinatorPrDeployer::new();
-        assert_eq!(tools.get_merged_pr_count(), 3);
+        assert_eq!(tools.get_merged_pr_count(), 5);
 
         let update = MintUpdateSoftwareInstallPrDeployer::new();
-        assert_eq!(update.get_merged_pr_count(), 2);
+        assert_eq!(update.get_merged_pr_count(), 3);
     }
 
     #[test]
     fn test_mint_master_pr_deployment_suite() {
         let master = MintMasterPrDeploymentSuite::new();
-        assert_eq!(master.compute_total_mint_pr_deployments(), 9);
+        assert_eq!(master.compute_total_mint_pr_deployments(), 14);
         assert!(master.verify_complete_mint_pr_deployment());
     }
 }
