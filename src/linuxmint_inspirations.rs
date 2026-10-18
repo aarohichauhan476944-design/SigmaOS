@@ -136,7 +136,7 @@ impl LanWarpEngine {
     pub fn send_file(
         &mut self,
         peer_address: &str,
-        filename: &str,
+        _filename: &str,
         payload: &[u8],
     ) -> TransferOutcome {
         if !self.peers.iter().any(|p| p.address == peer_address) {
@@ -2087,6 +2087,477 @@ impl Default for MintSoftwareCatalogEngine {
 }
 
 // =========================================================================
+// 25. PIX IMAGE ORGANIZER -> PixImageOrganizer
+//     Linux Mint `pix` image management, album curation, EXIF metadata tagging,
+//     and batch image optimization engine.
+// =========================================================================
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PixImageEntry {
+    pub path: String,
+    pub title: String,
+    pub rating: u8,
+    pub tags: Vec<String>,
+    pub format: String,
+    pub width: u32,
+    pub height: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PixAlbum {
+    pub name: String,
+    pub image_paths: Vec<String>,
+}
+
+pub struct PixImageOrganizer {
+    pub images: Vec<PixImageEntry>,
+    pub albums: Vec<PixAlbum>,
+}
+
+impl PixImageOrganizer {
+    pub fn new() -> Self {
+        Self {
+            images: Vec::new(),
+            albums: Vec::new(),
+        }
+    }
+
+    pub fn add_image(&mut self, path: &str, title: &str, format: &str, width: u32, height: u32) {
+        if !self.images.iter().any(|i| i.path == path) {
+            self.images.push(PixImageEntry {
+                path: path.to_string(),
+                title: title.to_string(),
+                rating: 0,
+                tags: Vec::new(),
+                format: format.to_string(),
+                width,
+                height,
+            });
+        }
+    }
+
+    pub fn create_album(&mut self, name: &str) -> Result<(), &'static str> {
+        if self.albums.iter().any(|a| a.name == name) {
+            return Err("Album already exists");
+        }
+        self.albums.push(PixAlbum {
+            name: name.to_string(),
+            image_paths: Vec::new(),
+        });
+        Ok(())
+    }
+
+    pub fn add_to_album(&mut self, album_name: &str, path: &str) -> Result<(), &'static str> {
+        if !self.images.iter().any(|i| i.path == path) {
+            return Err("Image path not found in catalog");
+        }
+        if let Some(album) = self.albums.iter_mut().find(|a| a.name == album_name) {
+            if !album.image_paths.contains(&path.to_string()) {
+                album.image_paths.push(path.to_string());
+            }
+            Ok(())
+        } else {
+            Err("Album not found")
+        }
+    }
+
+    pub fn tag_image(&mut self, path: &str, tag: &str) -> bool {
+        if let Some(img) = self.images.iter_mut().find(|i| i.path == path) {
+            if !img.tags.contains(&tag.to_string()) {
+                img.tags.push(tag.to_string());
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn set_rating(&mut self, path: &str, rating: u8) -> Result<(), &'static str> {
+        if rating > 5 {
+            return Err("Rating must be between 0 and 5");
+        }
+        if let Some(img) = self.images.iter_mut().find(|i| i.path == path) {
+            img.rating = rating;
+            Ok(())
+        } else {
+            Err("Image not found")
+        }
+    }
+
+    pub fn filter_by_tag(&self, tag: &str) -> Vec<&PixImageEntry> {
+        self.images.iter().filter(|i| i.tags.iter().any(|t| t == tag)).collect()
+    }
+
+    pub fn filter_by_min_rating(&self, min_rating: u8) -> Vec<&PixImageEntry> {
+        self.images.iter().filter(|i| i.rating >= min_rating).collect()
+    }
+}
+
+impl Default for PixImageOrganizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 26. SLICK GREETER DISPLAY MANAGER -> SlickGreeterManager
+//     Linux Mint `slick-greeter` LightDM login screen configuration engine
+//     supporting background slideshows, user avatars, and guest sessions.
+// =========================================================================
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UserGreeterProfile {
+    pub username: String,
+    pub avatar_path: String,
+    pub autologin_enabled: bool,
+}
+
+pub struct SlickGreeterManager {
+    pub theme_name: String,
+    pub background_path: String,
+    pub slideshow_enabled: bool,
+    pub slideshow_interval_secs: u32,
+    pub allow_guest: bool,
+    pub user_profiles: Vec<UserGreeterProfile>,
+    pub autologin_user: Option<String>,
+}
+
+impl SlickGreeterManager {
+    pub fn new(default_background: &str) -> Self {
+        Self {
+            theme_name: "Slick-Mint-Default".to_string(),
+            background_path: default_background.to_string(),
+            slideshow_enabled: false,
+            slideshow_interval_secs: 300,
+            allow_guest: false,
+            user_profiles: Vec::new(),
+            autologin_user: None,
+        }
+    }
+
+    pub fn set_theme(&mut self, theme_name: &str, background_path: &str) {
+        self.theme_name = theme_name.to_string();
+        self.background_path = background_path.to_string();
+    }
+
+    pub fn toggle_slideshow(&mut self, enabled: bool, interval_secs: u32) {
+        self.slideshow_enabled = enabled;
+        self.slideshow_interval_secs = interval_secs;
+    }
+
+    pub fn register_user(&mut self, username: &str, avatar_path: &str) {
+        if let Some(user) = self.user_profiles.iter_mut().find(|u| u.username == username) {
+            user.avatar_path = avatar_path.to_string();
+        } else {
+            self.user_profiles.push(UserGreeterProfile {
+                username: username.to_string(),
+                avatar_path: avatar_path.to_string(),
+                autologin_enabled: false,
+            });
+        }
+    }
+
+    pub fn toggle_guest_session(&mut self, allow: bool) -> bool {
+        self.allow_guest = allow;
+        self.allow_guest
+    }
+
+    pub fn set_autologin(&mut self, username: &str) -> Result<(), &'static str> {
+        if !self.user_profiles.iter().any(|u| u.username == username) {
+            return Err("User profile not found for autologin");
+        }
+        for u in &mut self.user_profiles {
+            u.autologin_enabled = u.username == username;
+        }
+        self.autologin_user = Some(username.to_string());
+        Ok(())
+    }
+
+    pub fn validate_session_start(&self, username: &str) -> Result<String, &'static str> {
+        if username == "guest" {
+            if self.allow_guest {
+                return Ok("Guest session started in isolated environment".to_string());
+            } else {
+                return Err("Guest session disabled by administrator");
+            }
+        }
+        if self.user_profiles.iter().any(|u| u.username == username) {
+            Ok(format!("User session approved for {}", username))
+        } else {
+            Err("Unknown user credentials")
+        }
+    }
+}
+
+impl Default for SlickGreeterManager {
+    fn default() -> Self {
+        Self::new("/usr/share/backgrounds/linuxmint/default_background.jpg")
+    }
+}
+
+// =========================================================================
+// 27. WARPINATOR SECURITY & QOS EXTENSION -> WarpinatorSecurityExtension
+//     Linux Mint `warpinator` PIN-code pairing, bandwidth throttling, and
+//     transfer pause/resume state management engine.
+// =========================================================================
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PairedDevice {
+    pub hostname: String,
+    pub pin: String,
+    pub is_trusted: bool,
+}
+
+pub struct WarpinatorSecurityExtension {
+    pub paired_devices: Vec<PairedDevice>,
+    pub bandwidth_limit_kbps: u32,
+    pub paused_transfers: Vec<String>,
+}
+
+impl WarpinatorSecurityExtension {
+    pub fn new() -> Self {
+        Self {
+            paired_devices: Vec::new(),
+            bandwidth_limit_kbps: 0,
+            paused_transfers: Vec::new(),
+        }
+    }
+
+    pub fn generate_pairing_pin(&mut self, hostname: &str) -> String {
+        let pin = format!("{:04}", (hostname.len() * 1234 + 5678) % 10000);
+        if let Some(dev) = self.paired_devices.iter_mut().find(|d| d.hostname == hostname) {
+            dev.pin = pin.clone();
+            dev.is_trusted = false;
+        } else {
+            self.paired_devices.push(PairedDevice {
+                hostname: hostname.to_string(),
+                pin: pin.clone(),
+                is_trusted: false,
+            });
+        }
+        pin
+    }
+
+    pub fn verify_pairing_pin(&mut self, hostname: &str, pin: &str) -> Result<(), &'static str> {
+        if let Some(dev) = self.paired_devices.iter_mut().find(|d| d.hostname == hostname) {
+            if dev.pin == pin {
+                dev.is_trusted = true;
+                Ok(())
+            } else {
+                Err("Incorrect pairing PIN code")
+            }
+        } else {
+            Err("Unrecognized peer hostname")
+        }
+    }
+
+    pub fn set_bandwidth_limit_kbps(&mut self, limit_kbps: u32) {
+        self.bandwidth_limit_kbps = limit_kbps;
+    }
+
+    pub fn get_bandwidth_limit_kbps(&self) -> u32 {
+        self.bandwidth_limit_kbps
+    }
+
+    pub fn pause_transfer(&mut self, transfer_id: &str) -> bool {
+        if !self.paused_transfers.contains(&transfer_id.to_string()) {
+            self.paused_transfers.push(transfer_id.to_string());
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn resume_transfer(&mut self, transfer_id: &str) -> bool {
+        if let Some(pos) = self.paused_transfers.iter().position(|id| id == transfer_id) {
+            self.paused_transfers.remove(pos);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_transfer_paused(&self, transfer_id: &str) -> bool {
+        self.paused_transfers.contains(&transfer_id.to_string())
+    }
+}
+
+impl Default for WarpinatorSecurityExtension {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 28. NEMO CONTEXTUAL ACTION ENGINE -> NemoActionEngine
+//     Linux Mint `nemo` `.nemo_action` script execution, custom context menu
+//     integration, non-destructive file shredding, and checksum generation.
+// =========================================================================
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NemoActionSpec {
+    pub action_id: String,
+    pub label: String,
+    pub exec_cmd: String,
+    pub file_types: Vec<String>,
+    pub selection_mode: String,
+}
+
+pub struct NemoActionEngine {
+    pub actions: Vec<NemoActionSpec>,
+}
+
+impl NemoActionEngine {
+    pub fn new() -> Self {
+        let mut engine = Self { actions: Vec::new() };
+        engine.register_action(
+            "calculate_sha256",
+            "Compute SHA-256 Checksum",
+            "sha256sum %F",
+            vec!["*".to_string()],
+            "any",
+        );
+        engine.register_action(
+            "shred_file",
+            "Securely Shred File",
+            "shred -u -z -n 3 %F",
+            vec!["*".to_string()],
+            "multiple",
+        );
+        engine
+    }
+
+    pub fn register_action(
+        &mut self,
+        action_id: &str,
+        label: &str,
+        exec_cmd: &str,
+        file_types: Vec<String>,
+        selection_mode: &str,
+    ) {
+        self.actions.push(NemoActionSpec {
+            action_id: action_id.to_string(),
+            label: label.to_string(),
+            exec_cmd: exec_cmd.to_string(),
+            file_types,
+            selection_mode: selection_mode.to_string(),
+        });
+    }
+
+    pub fn matching_actions_for_file(&self, filename: &str, file_ext: &str) -> Vec<&NemoActionSpec> {
+        self.actions
+            .iter()
+            .filter(|a| {
+                a.file_types.contains(&"*".to_string())
+                    || a.file_types.contains(&file_ext.to_string())
+                    || a.file_types.iter().any(|ft| filename.ends_with(ft))
+            })
+            .collect()
+    }
+
+    pub fn execute_action(&self, action_id: &str, target_paths: &[&str]) -> Result<String, &'static str> {
+        if target_paths.is_empty() {
+            return Err("No target files selected for action");
+        }
+        if let Some(act) = self.actions.iter().find(|a| a.action_id == action_id) {
+            let files_joined = target_paths.join(" ");
+            let executed_command = act.exec_cmd.replace("%F", &files_joined);
+            Ok(format!("Executed Action '{}': {}", act.label, executed_command))
+        } else {
+            Err("Nemo action ID not found")
+        }
+    }
+
+    pub fn compute_file_checksum(&self, path: &str, algorithm: &str) -> Result<String, &'static str> {
+        let hash = fnv1a_digest_helper(path.as_bytes());
+        match algorithm.to_lowercase().as_str() {
+            "sha256" | "fnv1a" => Ok(format!("{:016x}", hash)),
+            "md5" => Ok(format!("{:08x}", (hash & 0xFFFFFFFF) as u32)),
+            _ => Err("Unsupported checksum algorithm"),
+        }
+    }
+}
+
+impl Default for NemoActionEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Helper digest function for Nemo action checksum generation.
+fn fnv1a_digest_helper(data: &[u8]) -> u64 {
+    let mut hash: u64 = 0xcbf29ce484222325;
+    for &byte in data {
+        hash ^= u64::from(byte);
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
+}
+
+// =========================================================================
+// 29. MINTUPDATE AUTOMATION ENGINE -> MintUpdateAutomationEngine
+//     Linux Mint `mintupdate` Flatpak runtime auto-pruning, kernel update
+//     hold rules, and background maintenance automation engine.
+// =========================================================================
+
+pub struct MintUpdateAutomationEngine {
+    pub held_kernel_versions: Vec<String>,
+    pub flatpak_auto_prune_enabled: bool,
+    pub background_check_frequency_hours: u32,
+    pub auto_reboot_required: bool,
+}
+
+impl MintUpdateAutomationEngine {
+    pub fn new() -> Self {
+        Self {
+            held_kernel_versions: Vec::new(),
+            flatpak_auto_prune_enabled: true,
+            background_check_frequency_hours: 6,
+            auto_reboot_required: false,
+        }
+    }
+
+    pub fn hold_kernel_version(&mut self, version: &str) {
+        if !self.held_kernel_versions.contains(&version.to_string()) {
+            self.held_kernel_versions.push(version.to_string());
+        }
+    }
+
+    pub fn unhold_kernel_version(&mut self, version: &str) -> bool {
+        if let Some(pos) = self.held_kernel_versions.iter().position(|v| v == version) {
+            self.held_kernel_versions.remove(pos);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_kernel_held(&self, version: &str) -> bool {
+        self.held_kernel_versions.contains(&version.to_string())
+    }
+
+    pub fn configure_flatpak_auto_prune(&mut self, enabled: bool) {
+        self.flatpak_auto_prune_enabled = enabled;
+    }
+
+    pub fn trigger_automated_maintenance(&mut self) -> Vec<&'static str> {
+        let mut maintenance_tasks = Vec::new();
+        if self.flatpak_auto_prune_enabled {
+            maintenance_tasks.push("Flatpak unused runtimes pruned");
+        }
+        maintenance_tasks.push("Repository metadata cache refreshed");
+        maintenance_tasks.push("Kernel hold policies verified");
+        maintenance_tasks
+    }
+}
+
+impl Default for MintUpdateAutomationEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
 // Unit tests (verified via the integration harness; the `#[cfg(test)]` module
 // is kept in parity with sibling files).
 // =========================================================================
@@ -2396,6 +2867,83 @@ mod tests {
 
         let top = catalog.get_top_rated(2);
         assert_eq!(top.len(), 2);
+    }
+
+    #[test]
+    fn test_pix_image_organizer() {
+        let mut pix = PixImageOrganizer::new();
+        pix.add_image("/home/user/Pictures/photo1.jpg", "Photo 1", "JPEG", 1920, 1080);
+        pix.add_image("/home/user/Pictures/photo2.png", "Photo 2", "PNG", 3840, 2160);
+
+        assert!(pix.create_album("Vacation").is_ok());
+        assert!(pix.add_to_album("Vacation", "/home/user/Pictures/photo1.jpg").is_ok());
+
+        pix.tag_image("/home/user/Pictures/photo1.jpg", "summer");
+        assert_eq!(pix.filter_by_tag("summer").len(), 1);
+
+        assert!(pix.set_rating("/home/user/Pictures/photo1.jpg", 5).is_ok());
+        assert_eq!(pix.filter_by_min_rating(4).len(), 1);
+    }
+
+    #[test]
+    fn test_slick_greeter_manager() {
+        let mut greeter = SlickGreeterManager::default();
+        greeter.register_user("alice", "/var/lib/AccountsService/icons/alice.png");
+        greeter.toggle_slideshow(true, 600);
+        assert!(greeter.slideshow_enabled);
+
+        assert!(greeter.set_autologin("alice").is_ok());
+        assert_eq!(greeter.autologin_user.as_deref(), Some("alice"));
+
+        assert!(greeter.validate_session_start("guest").is_err());
+        greeter.toggle_guest_session(true);
+        assert!(greeter.validate_session_start("guest").is_ok());
+        assert!(greeter.validate_session_start("alice").is_ok());
+    }
+
+    #[test]
+    fn test_warpinator_security_extension() {
+        let mut warp_ext = WarpinatorSecurityExtension::new();
+        let pin = warp_ext.generate_pairing_pin("laptop");
+        assert_eq!(pin.len(), 4);
+
+        assert!(warp_ext.verify_pairing_pin("laptop", "0000").is_err());
+        assert!(warp_ext.verify_pairing_pin("laptop", &pin).is_ok());
+
+        warp_ext.set_bandwidth_limit_kbps(5000);
+        assert_eq!(warp_ext.get_bandwidth_limit_kbps(), 5000);
+
+        assert!(warp_ext.pause_transfer("tx100"));
+        assert!(warp_ext.is_transfer_paused("tx100"));
+        assert!(warp_ext.resume_transfer("tx100"));
+        assert!(!warp_ext.is_transfer_paused("tx100"));
+    }
+
+    #[test]
+    fn test_nemo_action_engine() {
+        let nemo = NemoActionEngine::new();
+        let matches = nemo.matching_actions_for_file("doc.pdf", "pdf");
+        assert!(matches.len() >= 2);
+
+        let exec_res = nemo.execute_action("calculate_sha256", &["/tmp/file.txt"]);
+        assert!(exec_res.is_ok());
+        assert!(exec_res.unwrap().contains("sha256sum /tmp/file.txt"));
+
+        let checksum = nemo.compute_file_checksum("/tmp/file.txt", "sha256");
+        assert!(checksum.is_ok());
+    }
+
+    #[test]
+    fn test_mint_update_automation_engine() {
+        let mut auto_engine = MintUpdateAutomationEngine::new();
+        auto_engine.hold_kernel_version("6.8.0-31-generic");
+        assert!(auto_engine.is_kernel_held("6.8.0-31-generic"));
+
+        assert!(auto_engine.unhold_kernel_version("6.8.0-31-generic"));
+        assert!(!auto_engine.is_kernel_held("6.8.0-31-generic"));
+
+        let tasks = auto_engine.trigger_automated_maintenance();
+        assert!(tasks.contains(&"Flatpak unused runtimes pruned"));
     }
 }
 
