@@ -47,6 +47,13 @@ if [ -f "src/security/kernel_hardening.rs" ]; then
     ./build/kernel_hardening_test
 fi
 
+if [ -f "src/security/kali_github_inspirations_pr.rs" ]; then
+    echo "Running Kali Linux GitHub Inspirations PR test suite..."
+    mkdir -p build
+    rustc --test --edition=2021 src/security/kali_github_inspirations_pr.rs -o build/kali_github_inspirations_test
+    ./build/kali_github_inspirations_test
+fi
+
 if [ -f "src/init/systemd_init.rs" ]; then
     echo "Running systemd init & service manager test suite..."
     mkdir -p build
