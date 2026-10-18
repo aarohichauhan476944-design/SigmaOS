@@ -56,6 +56,8 @@ pub mod sovereign_universal_subsystem_interop;
 pub use sovereign_universal_subsystem_interop::*;
 pub mod sovereign_omarchy_pr_components_engine;
 pub use sovereign_omarchy_pr_components_engine::*;
+pub mod omarchy_linux_pinnacle_components_v53_pr;
+pub use omarchy_linux_pinnacle_components_v53_pr::*;
 pub mod sovereign_wiki_ideas_pr_deployment_engine;
 pub use sovereign_wiki_ideas_pr_deployment_engine::*;
 pub mod sovereign_wiki_mint_omarchy_innovations;
