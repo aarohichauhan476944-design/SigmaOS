@@ -1001,6 +1001,13 @@ if [ -f "src/distro/sovereign_gentoo_gap_closure_pr_engine.rs" ]; then
     ./build/test_gentoo_pr_engine
 fi
 
+if [ -f "src/distro/gentoo_github_repo_components_pr_engine.rs" ]; then
+    echo "Running Gentoo Linux GitHub Repo Components PR Engine test suite..."
+    mkdir -p build
+    rustc --test src/distro/gentoo_github_repo_components_pr_engine.rs --edition=2021 -o build/test_gentoo_github_pr_engine
+    ./build/test_gentoo_github_pr_engine
+fi
+
 if [ -f "src/distro/sovereign_arch_gap_closure_pr_engine.rs" ]; then
     echo "Running Sovereign Arch Linux Gap Closure PR Engine test suite..."
     mkdir -p build
