@@ -9,15 +9,15 @@ use std::vec::Vec;
 /// elementary OS Accent Colors from HIG Guidelines
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ElementaryAccentColor {
-    Blueberry,  // #388e3c / #1a73e8
-    Strawberry, // #e53935
-    Orange,     // #f57c00
-    Banana,     // #fbc02d
-    Lime,       // #7cb342
-    Mint,       // #00bfa5
-    Grape,      // #8e24aa
-    Slate,      // #546e7a
-    Cocoa,      // #6d4c41
+    Blueberry,  // #3584e4
+    Strawberry, // #ed333b
+    Orange,     // #ff7800
+    Banana,     // #f6d32d
+    Lime,       // #33d17a
+    Mint,       // #2ec27e
+    Grape,      // #9141ac",
+    Slate,      // #77767b
+    Cocoa,      // #865e3c
 }
 
 impl ElementaryAccentColor {
@@ -36,10 +36,19 @@ impl ElementaryAccentColor {
     }
 }
 
+/// Dark Mode Schedule Mode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DarkScheduleMode {
+    Manual,
+    SunsetToSunrise,
+    CustomHours { start_hour: u8, end_hour: u8 },
+}
+
 /// Granite UI Toolkit HIG Configuration
 #[derive(Debug, Clone)]
 pub struct GraniteHigConfig {
     pub prefer_dark_style: bool,
+    pub dark_schedule: DarkScheduleMode,
     pub accent_color: ElementaryAccentColor,
     pub rounded_corners_radius_px: u32,
     pub grid_unit_px: u32, // HIG 4px or 8px grid alignment
@@ -50,10 +59,37 @@ impl Default for GraniteHigConfig {
     fn default() -> Self {
         Self {
             prefer_dark_style: false,
+            dark_schedule: DarkScheduleMode::SunsetToSunrise,
             accent_color: ElementaryAccentColor::Blueberry,
             rounded_corners_radius_px: 8,
             grid_unit_px: 4,
             high_contrast: false,
+        }
+    }
+}
+
+impl GraniteHigConfig {
+    pub fn snap_to_grid(&self, val_px: u32) -> u32 {
+        if self.grid_unit_px == 0 {
+            return val_px;
+        }
+        ((val_px + self.grid_unit_px / 2) / self.grid_unit_px) * self.grid_unit_px
+    }
+
+    pub fn is_dark_mode_active(&self, current_hour: u8) -> bool {
+        if self.prefer_dark_style {
+            return true;
+        }
+        match self.dark_schedule {
+            DarkScheduleMode::Manual => self.prefer_dark_style,
+            DarkScheduleMode::SunsetToSunrise => current_hour >= 19 || current_hour < 7,
+            DarkScheduleMode::CustomHours { start_hour, end_hour } => {
+                if start_hour <= end_hour {
+                    current_hour >= start_hour && current_hour < end_hour
+                } else {
+                    current_hour >= start_hour || current_hour < end_hour
+                }
+            }
         }
     }
 }
@@ -68,15 +104,25 @@ pub struct ContractorContract {
     pub icon_name: String,
 }
 
+/// Contractor Execution Result
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContractorExecutionResult {
+    pub contract_name: String,
+    pub executed_command: String,
+    pub success: bool,
+}
+
 /// Contractor Service Hub for dynamic context-menu actions
 pub struct ContractorServiceHub {
     pub contracts: Vec<ContractorContract>,
+    pub execution_log: Vec<ContractorExecutionResult>,
 }
 
 impl ContractorServiceHub {
     pub fn new() -> Self {
         Self {
             contracts: Vec::new(),
+            execution_log: Vec::new(),
         }
     }
 
@@ -91,12 +137,40 @@ impl ContractorServiceHub {
             .cloned()
             .collect()
     }
+
+    pub fn execute_contract(&mut self, contract_name: &str, file_path: &str) -> Option<ContractorExecutionResult> {
+        if let Some(contract) = self.contracts.iter().find(|c| c.name == contract_name) {
+            let cmd = contract.exec_command.replace("%f", file_path);
+            let result = ContractorExecutionResult {
+                contract_name: contract.name.clone(),
+                executed_command: cmd,
+                success: true,
+            };
+            self.execution_log.push(result.clone());
+            Some(result)
+        } else {
+            None
+        }
+    }
 }
 
 impl Default for ContractorServiceHub {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Gala Window Snap Layout Position
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WindowSnapPosition {
+    None,
+    LeftHalf,
+    RightHalf,
+    TopLeftQuarter,
+    TopRightQuarter,
+    BottomLeftQuarter,
+    BottomRightQuarter,
+    Maximize,
 }
 
 /// Gala Window Manager Multitasking & Workspace State
@@ -112,6 +186,7 @@ pub struct GalaWindowManagerEngine {
     pub active_workspace_idx: usize,
     pub multitasking_view_active: bool,
     pub window_animations_enabled: bool,
+    pub window_snaps: HashMap<u64, WindowSnapPosition>,
 }
 
 impl GalaWindowManagerEngine {
@@ -121,6 +196,7 @@ impl GalaWindowManagerEngine {
             active_workspace_idx: 0,
             multitasking_view_active: false,
             window_animations_enabled: true,
+            window_snaps: HashMap::new(),
         };
         engine.workspaces.push(GalaWorkspace {
             id: 0,
@@ -153,12 +229,28 @@ impl GalaWindowManagerEngine {
             false
         }
     }
+
+    pub fn snap_window(&mut self, window_id: u64, position: WindowSnapPosition) {
+        self.window_snaps.insert(window_id, position);
+    }
+
+    pub fn get_window_snap(&self, window_id: u64) -> WindowSnapPosition {
+        self.window_snaps.get(&window_id).copied().unwrap_or(WindowSnapPosition::None)
+    }
 }
 
 impl Default for GalaWindowManagerEngine {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Wingpanel Indicator Position
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WingpanelPosition {
+    Left,
+    Center,
+    Right,
 }
 
 /// Wingpanel Top Panel Applet Indicator
@@ -168,6 +260,7 @@ pub struct WingpanelApplet {
     pub label: String,
     pub icon: String,
     pub visible: bool,
+    pub position: WingpanelPosition,
     pub tooltip: String,
 }
 
@@ -188,14 +281,15 @@ impl WingpanelTopBar {
 
     fn register_default_applets(&mut self) {
         let defaults = vec![
-            ("datetime", "Date & Time", "clock-symbolic"),
-            ("network", "Network", "network-wireless-symbolic"),
-            ("sound", "Sound", "audio-volume-high-symbolic"),
-            ("power", "Power", "battery-good-symbolic"),
-            ("nightlight", "Night Light", "night-light-symbolic"),
+            ("applications", "Applications", "system-search-symbolic", WingpanelPosition::Left),
+            ("datetime", "Date & Time", "clock-symbolic", WingpanelPosition::Center),
+            ("network", "Network", "network-wireless-symbolic", WingpanelPosition::Right),
+            ("sound", "Sound", "audio-volume-high-symbolic", WingpanelPosition::Right),
+            ("power", "Power", "battery-good-symbolic", WingpanelPosition::Right),
+            ("nightlight", "Night Light", "night-light-symbolic", WingpanelPosition::Right),
         ];
 
-        for (id, label, icon) in defaults {
+        for (id, label, icon, pos) in defaults {
             self.applets.insert(
                 id.to_string(),
                 WingpanelApplet {
@@ -203,6 +297,7 @@ impl WingpanelTopBar {
                     label: label.to_string(),
                     icon: icon.to_string(),
                     visible: true,
+                    position: pos,
                     tooltip: format!("elementary {}", label),
                 },
             );
@@ -216,6 +311,14 @@ impl WingpanelTopBar {
         } else {
             false
         }
+    }
+
+    pub fn get_applets_at_position(&self, pos: WingpanelPosition) -> Vec<WingpanelApplet> {
+        self.applets
+            .values()
+            .filter(|a| a.position == pos && a.visible)
+            .cloned()
+            .collect()
     }
 }
 
@@ -278,6 +381,14 @@ impl Default for PlankDockManager {
     }
 }
 
+/// AppCenter Transaction Entry
+#[derive(Debug, Clone)]
+pub struct AppCenterTransaction {
+    pub app_id: String,
+    pub amount_usd: u32,
+    pub timestamp_epoch_sec: u64,
+}
+
 /// AppCenter Pay-What-You-Want Monetized Software Item
 #[derive(Debug, Clone)]
 pub struct AppCenterApp {
@@ -293,6 +404,7 @@ pub struct AppCenterApp {
 pub struct AppCenterStoreEngine {
     pub catalog: HashMap<String, AppCenterApp>,
     pub user_balance_cents: u32,
+    pub transaction_history: Vec<AppCenterTransaction>,
 }
 
 impl AppCenterStoreEngine {
@@ -300,6 +412,7 @@ impl AppCenterStoreEngine {
         let mut store = Self {
             catalog: HashMap::new(),
             user_balance_cents: 5000, // $50.00 mock balance
+            transaction_history: Vec::new(),
         };
         store.populate_sample_catalog();
         store
@@ -362,10 +475,19 @@ impl AppCenterStoreEngine {
         if let Some(app) = self.catalog.get_mut(app_id) {
             self.user_balance_cents -= cost_cents;
             app.installed = true;
+            self.transaction_history.push(AppCenterTransaction {
+                app_id: app_id.to_string(),
+                amount_usd: custom_payment_usd,
+                timestamp_epoch_sec: 1700000000,
+            });
             Ok(true)
         } else {
             Err("App ID not found in AppCenter catalog")
         }
+    }
+
+    pub fn get_curated_apps(&self) -> Vec<AppCenterApp> {
+        self.catalog.values().filter(|a| a.is_curated).cloned().collect()
     }
 }
 
@@ -557,6 +679,15 @@ mod tests {
     }
 
     #[test]
+    fn test_granite_hig_grid_and_dark_mode() {
+        let hig = GraniteHigConfig::default();
+        assert_eq!(hig.snap_to_grid(5), 4);
+        assert_eq!(hig.snap_to_grid(7), 8);
+        assert!(hig.is_dark_mode_active(22));
+        assert!(!hig.is_dark_mode_active(12));
+    }
+
+    #[test]
     fn test_contractor_service_hub() {
         let mut contractor = ContractorServiceHub::new();
         contractor.register_contract(ContractorContract {
@@ -570,6 +701,12 @@ mod tests {
         let contracts = contractor.get_contracts_for_mime("image/png");
         assert_eq!(contracts.len(), 1);
         assert_eq!(contracts[0].name, "Email Image");
+
+        let res = contractor.execute_contract("Email Image", "/home/user/photo.png");
+        assert!(res.is_some());
+        let exec = res.unwrap();
+        assert_eq!(exec.executed_command, "io.elementary.mail /home/user/photo.png");
+        assert_eq!(contractor.execution_log.len(), 1);
     }
 
     #[test]
@@ -580,6 +717,9 @@ mod tests {
         assert!(gala.assign_window_to_workspace(1001, ws2));
         assert!(gala.toggle_multitasking_view());
         assert!(gala.multitasking_view_active);
+
+        gala.snap_window(1001, WindowSnapPosition::LeftHalf);
+        assert_eq!(gala.get_window_snap(1001), WindowSnapPosition::LeftHalf);
     }
 
     #[test]
@@ -588,6 +728,10 @@ mod tests {
         assert!(wingpanel.applets.contains_key("datetime"));
         assert!(wingpanel.set_applet_visibility("datetime", false));
         assert!(!wingpanel.applets.get("datetime").unwrap().visible);
+
+        let center_applets = wingpanel.get_applets_at_position(WingpanelPosition::Center);
+        // datetime was hidden, so 0 visible center applets
+        assert_eq!(center_applets.len(), 0);
     }
 
     #[test]
@@ -613,6 +757,10 @@ mod tests {
         let res_paid = store.purchase_and_install("io.elementary.tasks", 10);
         assert!(res_paid.is_ok());
         assert_eq!(store.user_balance_cents, 4000); // 5000 - 1000 = 4000
+        assert_eq!(store.transaction_history.len(), 2);
+
+        let curated = store.get_curated_apps();
+        assert!(!curated.is_empty());
     }
 
     #[test]
