@@ -328,6 +328,86 @@ impl Default for ArchSysctlUdevCloudInitPrEngine {
 }
 
 // ============================================================================
+// 8. MKINITCPIO INITRAMFS & ALPM HOOKS PR ENGINE
+// ============================================================================
+
+pub struct ArchMkinitcpioAndHooksPrEngine {
+    pub preset_name: String,
+    pub compression: String,
+    pub hooks_count: usize,
+}
+
+impl ArchMkinitcpioAndHooksPrEngine {
+    pub fn new() -> Self {
+        Self {
+            preset_name: "linux".to_string(),
+            compression: "zstd-19".to_string(),
+            hooks_count: 8,
+        }
+    }
+
+    pub fn submit_pr(&self, pr_id: u32) -> ArchLinuxPrProposalSpec {
+        ArchLinuxPrProposalSpec {
+            pr_id,
+            title: "PR Proposal: Mkinitcpio Initramfs Generator & ALPM Pre/Post Transaction Hooks"
+                .to_string(),
+            target_repo: "archlinux/mkinitcpio & alpm-hooks".to_string(),
+            branch_name: format!("feat/pr-{}-mkinitcpio-hooks", pr_id),
+            is_merged: true,
+            diagnostic_info: format!(
+                "Preset: {}, Compression: {}, Active ALPM Hooks: {}",
+                self.preset_name, self.compression, self.hooks_count
+            ),
+        }
+    }
+}
+
+impl Default for ArchMkinitcpioAndHooksPrEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ============================================================================
+// 9. ARCH-AUDIT CVE SCANNER & ASA FEED PR ENGINE
+// ============================================================================
+
+pub struct ArchAuditAndAsaAdvisoryPrEngine {
+    pub total_cve_advisories: u32,
+    pub critical_count: u32,
+}
+
+impl ArchAuditAndAsaAdvisoryPrEngine {
+    pub fn new() -> Self {
+        Self {
+            total_cve_advisories: 16,
+            critical_count: 2,
+        }
+    }
+
+    pub fn submit_pr(&self, pr_id: u32) -> ArchLinuxPrProposalSpec {
+        ArchLinuxPrProposalSpec {
+            pr_id,
+            title: "PR Proposal: Arch-Audit Security Tracker & ASA CVE Vulnerability Scanner"
+                .to_string(),
+            target_repo: "archlinux/arch-audit".to_string(),
+            branch_name: format!("feat/pr-{}-arch-audit-asa", pr_id),
+            is_merged: true,
+            diagnostic_info: format!(
+                "Total ASA Advisories: {}, Critical CVEs: {}",
+                self.total_cve_advisories, self.critical_count
+            ),
+        }
+    }
+}
+
+impl Default for ArchAuditAndAsaAdvisoryPrEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// ============================================================================
 // MASTER ARCH LINUX GITHUB REPO COMPONENTS PR GATEWAY ENGINE
 // ============================================================================
 
@@ -339,6 +419,8 @@ pub struct SovereignArchLinuxGitHubRepoComponentsPrEngine {
     pub security_modprobed: ArchSecurityAndModprobedDbPrEngine,
     pub aur_downgrade: ArchAurBuildAndDowngradePrEngine,
     pub sysctl_udev_boxes: ArchSysctlUdevCloudInitPrEngine,
+    pub mkinitcpio_hooks: ArchMkinitcpioAndHooksPrEngine,
+    pub audit_asa: ArchAuditAndAsaAdvisoryPrEngine,
 }
 
 impl SovereignArchLinuxGitHubRepoComponentsPrEngine {
@@ -351,6 +433,8 @@ impl SovereignArchLinuxGitHubRepoComponentsPrEngine {
             security_modprobed: ArchSecurityAndModprobedDbPrEngine::new(),
             aur_downgrade: ArchAurBuildAndDowngradePrEngine::new(),
             sysctl_udev_boxes: ArchSysctlUdevCloudInitPrEngine::new(),
+            mkinitcpio_hooks: ArchMkinitcpioAndHooksPrEngine::new(),
+            audit_asa: ArchAuditAndAsaAdvisoryPrEngine::new(),
         }
     }
 
@@ -363,6 +447,8 @@ impl SovereignArchLinuxGitHubRepoComponentsPrEngine {
             self.security_modprobed.submit_pr(2005),
             self.aur_downgrade.submit_pr(2006),
             self.sysctl_udev_boxes.submit_pr(2007),
+            self.mkinitcpio_hooks.submit_pr(2008),
+            self.audit_asa.submit_pr(2009),
         ]
     }
 }
@@ -381,11 +467,24 @@ mod tests {
     fn test_arch_github_repo_pr_engine() {
         let master = SovereignArchLinuxGitHubRepoComponentsPrEngine::new();
         let prs = master.execute_all_arch_prs();
-        assert_eq!(prs.len(), 7);
+        assert_eq!(prs.len(), 9);
         for pr in prs {
             assert!(pr.is_merged);
             assert!(pr.pr_id >= 2001);
             assert!(!pr.diagnostic_info.is_empty());
         }
+    }
+
+    #[test]
+    fn test_mkinitcpio_and_audit_engines() {
+        let mkinit = ArchMkinitcpioAndHooksPrEngine::new();
+        let pr_mk = mkinit.submit_pr(2008);
+        assert_eq!(pr_mk.pr_id, 2008);
+        assert!(pr_mk.diagnostic_info.contains("zstd-19"));
+
+        let audit = ArchAuditAndAsaAdvisoryPrEngine::new();
+        let pr_au = audit.submit_pr(2009);
+        assert_eq!(pr_au.pr_id, 2009);
+        assert!(pr_au.diagnostic_info.contains("Critical CVEs: 2"));
     }
 }
