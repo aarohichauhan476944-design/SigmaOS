@@ -574,6 +574,8 @@ pub mod sovereign_mint_omarchy_innovations_v31;
 pub mod sovereign_mint_omarchy_v32_apex_arsenal;
 pub mod sovereign_mint_omarchy_v33_apex_vanguard;
 pub mod sovereign_mint_omarchy_v34_apex_pantheon;
+pub mod sovereign_mint_github_inspirations_pr;
+pub use sovereign_mint_github_inspirations_pr::*;
 pub mod sovereign_netbsd_parity_engine;
 pub mod sovereign_omarchy_github_repo_parity;
 pub mod sovereign_omarchy_repository_innovations;
