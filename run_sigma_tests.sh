@@ -47,6 +47,13 @@ if [ -f "src/security/kernel_hardening.rs" ]; then
     ./build/kernel_hardening_test
 fi
 
+if [ -f "src/security/kali_linux_github_repo_pr.rs" ]; then
+    echo "Running Kali Linux Parity Components & PR Engine test suite..."
+    mkdir -p build
+    rustc --test src/security/kali_linux_github_repo_pr.rs --edition=2021 -o build/kali_linux_pr_test
+    ./build/kali_linux_pr_test
+fi
+
 if [ -f "src/init/systemd_init.rs" ]; then
     echo "Running systemd init & service manager test suite..."
     mkdir -p build
