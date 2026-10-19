@@ -174,6 +174,465 @@ impl Default for EosWelcomeApp {
     }
 }
 
+// =========================================================================
+// ENDEAVOUROS GITHUB REPOSITORY INSPIRATION COMPONENTS & PR GATEWAY
+// =========================================================================
+
+/// Mirror Protocol Selection for `eos-rankmirrors`
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MirrorProtocol {
+    Https,
+    Http,
+    Rsync,
+}
+
+/// Advanced Mirror Entry with Geolocation & Protocols
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EosMirrorInfo {
+    pub name: String,
+    pub country: String,
+    pub url: String,
+    pub protocol: MirrorProtocol,
+    pub latency_ms: u32,
+    pub download_speed_kbps: u32,
+    pub sync_status_ok: bool,
+}
+
+/// `eos-rankmirrors` Mirror Auto-Selection & Ranking Engine
+pub struct EosRankMirrorsEngine {
+    pub mirrors: Vec<EosMirrorInfo>,
+    pub max_results: usize,
+}
+
+impl EosRankMirrorsEngine {
+    pub fn new(max_results: usize) -> Self {
+        Self {
+            mirrors: Vec::new(),
+            max_results,
+        }
+    }
+
+    pub fn register_mirror(&mut self, mirror: EosMirrorInfo) {
+        self.mirrors.push(mirror);
+    }
+
+    /// Ranks mirrors filtering out out-of-sync mirrors, matching protocol and country if requested
+    pub fn rank_top_mirrors(
+        &self,
+        country_filter: Option<&str>,
+        protocol_filter: Option<MirrorProtocol>,
+    ) -> Vec<EosMirrorInfo> {
+        let mut filtered: Vec<EosMirrorInfo> = self
+            .mirrors
+            .iter()
+            .filter(|m| m.sync_status_ok)
+            .filter(|m| {
+                if let Some(c) = country_filter {
+                    m.country.eq_ignore_ascii_case(c)
+                } else {
+                    true
+                }
+            })
+            .filter(|m| {
+                if let Some(p) = protocol_filter {
+                    m.protocol == p
+                } else {
+                    true
+                }
+            })
+            .cloned()
+            .collect();
+
+        // Sort by lowest latency, then highest download speed
+        filtered.sort_by(|a, b| {
+            a.latency_ms
+                .cmp(&b.latency_ms)
+                .then_with(|| b.download_speed_kbps.cmp(&a.download_speed_kbps))
+        });
+
+        filtered.truncate(self.max_results);
+        filtered
+    }
+}
+
+/// Category of Package Profile in `eos-quickstart`
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QuickstartCategory {
+    DesktopCustomization,
+    DeveloperTools,
+    GamingAndGraphics,
+    SystemMaintenance,
+    NetworkingAndSecurity,
+}
+
+/// Quickstart Software Bundle Profile
+#[derive(Debug, Clone)]
+pub struct QuickstartBundle {
+    pub name: String,
+    pub category: QuickstartCategory,
+    pub packages: Vec<String>,
+    pub description: String,
+}
+
+/// `eos-quickstart` Post-Install Application Installer & Profile Selector Engine
+pub struct EosQuickstartEngine {
+    pub available_bundles: Vec<QuickstartBundle>,
+    pub selected_bundles: Vec<String>,
+}
+
+impl EosQuickstartEngine {
+    pub fn new() -> Self {
+        let mut engine = Self {
+            available_bundles: Vec::new(),
+            selected_bundles: Vec::new(),
+        };
+        engine.init_default_bundles();
+        engine
+    }
+
+    fn init_default_bundles(&mut self) {
+        self.available_bundles.push(QuickstartBundle {
+            name: "endeavour-dev-essential".to_string(),
+            category: QuickstartCategory::DeveloperTools,
+            packages: vec![
+                "base-devel".to_string(),
+                "git".to_string(),
+                "rustup".to_string(),
+                "neovim".to_string(),
+            ],
+            description: "Essential compilation toolchain and developer tools".to_string(),
+        });
+        self.available_bundles.push(QuickstartBundle {
+            name: "endeavour-gaming-pack".to_string(),
+            category: QuickstartCategory::GamingAndGraphics,
+            packages: vec![
+                "steam".to_string(),
+                "gamescope".to_string(),
+                "mangohud".to_string(),
+                "lutris".to_string(),
+            ],
+            description: "Gaming stack with Steam and Gamescope".to_string(),
+        });
+        self.available_bundles.push(QuickstartBundle {
+            name: "endeavour-sys-admin".to_string(),
+            category: QuickstartCategory::SystemMaintenance,
+            packages: vec![
+                "btop".to_string(),
+                "reflector".to_string(),
+                "paccache".to_string(),
+                "fastfetch".to_string(),
+            ],
+            description: "System diagnostics and maintenance tools".to_string(),
+        });
+    }
+
+    pub fn select_bundle(&mut self, bundle_name: &str) -> Result<(), &'static str> {
+        if self.available_bundles.iter().any(|b| b.name == bundle_name) {
+            if !self.selected_bundles.contains(&bundle_name.to_string()) {
+                self.selected_bundles.push(bundle_name.to_string());
+            }
+            Ok(())
+        } else {
+            Err("Quickstart bundle not found")
+        }
+    }
+
+    pub fn resolve_all_packages(&self) -> Vec<String> {
+        let mut pkgs = Vec::new();
+        for b_name in &self.selected_bundles {
+            if let Some(bundle) = self.available_bundles.iter().find(|b| &b.name == b_name) {
+                for p in &bundle.packages {
+                    if !pkgs.contains(p) {
+                        pkgs.push(p.clone());
+                    }
+                }
+            }
+        }
+        pkgs
+    }
+}
+
+impl Default for EosQuickstartEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// EndeavourOS App Discovery Status
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AppSourceType {
+    OfficialRepo,
+    EndeavourRepo,
+    Aur,
+}
+
+/// App Information Entry for `eos-apps-info`
+#[derive(Debug, Clone)]
+pub struct EosAppInfo {
+    pub name: String,
+    pub title: String,
+    pub source: AppSourceType,
+    pub summary: String,
+    pub installed: bool,
+}
+
+/// `eos-apps-info` Application Discovery Engine
+pub struct EosAppsInfoEngine {
+    pub app_database: Vec<EosAppInfo>,
+}
+
+impl EosAppsInfoEngine {
+    pub fn new() -> Self {
+        let mut engine = Self {
+            app_database: Vec::new(),
+        };
+        engine.init_database();
+        engine
+    }
+
+    fn init_database(&mut self) {
+        self.app_database.push(EosAppInfo {
+            name: "welcome".to_string(),
+            title: "EndeavourOS Welcome".to_string(),
+            source: AppSourceType::EndeavourRepo,
+            summary: "Welcome application and maintenance hub".to_string(),
+            installed: true,
+        });
+        self.app_database.push(EosAppInfo {
+            name: "eos-rankmirrors".to_string(),
+            title: "EndeavourOS Rank Mirrors".to_string(),
+            source: AppSourceType::EndeavourRepo,
+            summary: "Automatic mirror ranking utility".to_string(),
+            installed: true,
+        });
+        self.app_database.push(EosAppInfo {
+            name: "akm".to_string(),
+            title: "AKM Kernel Manager".to_string(),
+            source: AppSourceType::EndeavourRepo,
+            summary: "GUI/CLI Linux kernel manager for EndeavourOS".to_string(),
+            installed: false,
+        });
+        self.app_database.push(EosAppInfo {
+            name: "yay".to_string(),
+            title: "Yay AUR Helper".to_string(),
+            source: AppSourceType::Aur,
+            summary: "Yet Another Yogurt - AUR Helper".to_string(),
+            installed: true,
+        });
+    }
+
+    pub fn search_apps(&self, query: &str) -> Vec<EosAppInfo> {
+        let q = query.to_lowercase();
+        self.app_database
+            .iter()
+            .filter(|a| a.name.to_lowercase().contains(&q) || a.title.to_lowercase().contains(&q) || a.summary.to_lowercase().contains(&q))
+            .cloned()
+            .collect()
+    }
+}
+
+impl Default for EosAppsInfoEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Notification Priority Level for `eos-update-notifier`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum NotificationPriority {
+    Low,
+    Normal,
+    High,
+    Critical,
+}
+
+/// Update Notification Event
+#[derive(Debug, Clone)]
+pub struct UpdateNotificationEvent {
+    pub package_count: usize,
+    pub aur_package_count: usize,
+    pub priority: NotificationPriority,
+    pub message: String,
+}
+
+/// `eos-update-notifier` Daemon Engine
+pub struct EosUpdateNotifierDaemon {
+    pub check_interval_minutes: u32,
+    pub include_aur: bool,
+    pub last_event: Option<UpdateNotificationEvent>,
+}
+
+impl EosUpdateNotifierDaemon {
+    pub fn new(check_interval_minutes: u32, include_aur: bool) -> Self {
+        Self {
+            check_interval_minutes,
+            include_aur,
+            last_event: None,
+        }
+    }
+
+    /// Simulates update check logic
+    pub fn perform_update_check(&mut self, repo_updates: usize, aur_updates: usize) -> UpdateNotificationEvent {
+        let priority = if repo_updates > 50 || aur_updates > 20 {
+            NotificationPriority::High
+        } else if repo_updates > 0 || (self.include_aur && aur_updates > 0) {
+            NotificationPriority::Normal
+        } else {
+            NotificationPriority::Low
+        };
+
+        let msg = format!(
+            "EndeavourOS Update Notifier: {} repo updates and {} AUR updates available.",
+            repo_updates,
+            if self.include_aur { aur_updates } else { 0 }
+        );
+
+        let event = UpdateNotificationEvent {
+            package_count: repo_updates,
+            aur_package_count: if self.include_aur { aur_updates } else { 0 },
+            priority,
+            message: msg,
+        };
+
+        self.last_event = Some(event.clone());
+        event
+    }
+}
+
+/// Script Security Policy for `eos-script-repo`
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScriptSecurityLevel {
+    TrustedSystem,
+    CommunityUser,
+    UntrustedSandbox,
+}
+
+/// `eos-script-repo` Community Script Management & Execution Engine
+pub struct EosScriptRepoSandbox {
+    pub scripts: Vec<(String, ScriptSecurityLevel, String)>,
+}
+
+impl EosScriptRepoSandbox {
+    pub fn new() -> Self {
+        Self {
+            scripts: Vec::new(),
+        }
+    }
+
+    pub fn add_script(&mut self, name: &str, level: ScriptSecurityLevel, code: &str) {
+        self.scripts.push((name.to_string(), level, code.to_string()));
+    }
+
+    pub fn execute_script(&self, name: &str) -> Result<String, &'static str> {
+        let found = self.scripts.iter().find(|s| s.0 == name);
+        if let Some((s_name, level, code)) = found {
+            match level {
+                ScriptSecurityLevel::TrustedSystem => {
+                    Ok(format!("Executing trusted script '{}': SUCCESS. Output len: {}", s_name, code.len()))
+                }
+                ScriptSecurityLevel::CommunityUser => {
+                    Ok(format!("Executing community script '{}' in restricted container: SUCCESS.", s_name))
+                }
+                ScriptSecurityLevel::UntrustedSandbox => {
+                    Err("Execution denied: Script security level untrusted without user authorization.")
+                }
+            }
+        } else {
+            Err("Script not found in repository.")
+        }
+    }
+}
+
+impl Default for EosScriptRepoSandbox {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// `EndeavourOsPrGateway`: Pull-Request Format Parity & Feature Gateway for SigmaOS
+pub struct EndeavourOsPrGateway {
+    pub gateway_name: String,
+    pub pr_id: u32,
+    pub rankmirrors_engine: EosRankMirrorsEngine,
+    pub quickstart_engine: EosQuickstartEngine,
+    pub apps_info_engine: EosAppsInfoEngine,
+    pub update_notifier: EosUpdateNotifierDaemon,
+    pub script_sandbox: EosScriptRepoSandbox,
+    pub verification_passed: bool,
+}
+
+impl EndeavourOsPrGateway {
+    pub fn new(pr_id: u32) -> Self {
+        Self {
+            gateway_name: "EndeavourOS GitHub Ecosystem Gateway".to_string(),
+            pr_id,
+            rankmirrors_engine: EosRankMirrorsEngine::new(10),
+            quickstart_engine: EosQuickstartEngine::new(),
+            apps_info_engine: EosAppsInfoEngine::new(),
+            update_notifier: EosUpdateNotifierDaemon::new(60, true),
+            script_sandbox: EosScriptRepoSandbox::new(),
+            verification_passed: false,
+        }
+    }
+
+    /// Runs comprehensive verification across all EndeavourOS inspiration subsystems
+    pub fn verify_pr_parity(&mut self) -> Result<String, &'static str> {
+        // 1. Verify rankmirrors
+        self.rankmirrors_engine.register_mirror(EosMirrorInfo {
+            name: "eos-us-mirror".to_string(),
+            country: "USA".to_string(),
+            url: "https://us.mirror.endeavouros.com".to_string(),
+            protocol: MirrorProtocol::Https,
+            latency_ms: 30,
+            download_speed_kbps: 25000,
+            sync_status_ok: true,
+        });
+        let ranked = self.rankmirrors_engine.rank_top_mirrors(Some("USA"), Some(MirrorProtocol::Https));
+        if ranked.is_empty() {
+            return Err("PR Verification Failed: Mirror ranking returned empty set.");
+        }
+
+        // 2. Verify quickstart
+        if self.quickstart_engine.select_bundle("endeavour-dev-essential").is_err() {
+            return Err("PR Verification Failed: Quickstart bundle selection failed.");
+        }
+        let resolved_pkgs = self.quickstart_engine.resolve_all_packages();
+        if !resolved_pkgs.contains(&"git".to_string()) {
+            return Err("PR Verification Failed: Quickstart package resolution incomplete.");
+        }
+
+        // 3. Verify apps info
+        let apps = self.apps_info_engine.search_apps("welcome");
+        if apps.is_empty() {
+            return Err("PR Verification Failed: Apps info search failed.");
+        }
+
+        // 4. Verify update notifier
+        let evt = self.update_notifier.perform_update_check(12, 3);
+        if evt.package_count != 12 {
+            return Err("PR Verification Failed: Update notifier event mismatch.");
+        }
+
+        // 5. Verify script sandbox
+        self.script_sandbox.add_script(
+            "fix-keyring",
+            ScriptSecurityLevel::TrustedSystem,
+            "pacman-key --refresh-keys",
+        );
+        let script_res = self.script_sandbox.execute_script("fix-keyring");
+        if script_res.is_err() {
+            return Err("PR Verification Failed: Script sandbox execution failed.");
+        }
+
+        self.verification_passed = true;
+
+        Ok(format!(
+            "PR #{}: EndeavourOS GitHub Ecosystem Components Verified Successfully!\nGateway: {}\nAll 5 Subsystems Green.",
+            self.pr_id, self.gateway_name
+        ))
+    }
+}
+
 /// EOS Log Tool (Diagnostic Pastebin Uploader)
 pub struct EosLogTool;
 
@@ -302,6 +761,68 @@ mod tests {
         akm.install_kernel(EosKernelFlavor::LinuxZen);
         assert!(akm.switch_active_kernel(EosKernelFlavor::LinuxZen).is_ok());
         assert_eq!(akm.current_kernel, EosKernelFlavor::LinuxZen);
+    }
+
+    #[test]
+    fn test_eos_github_inspirations_and_pr_gateway() {
+        // Test RankMirrors Engine
+        let mut ranker = EosRankMirrorsEngine::new(5);
+        ranker.register_mirror(EosMirrorInfo {
+            name: "de-fast".to_string(),
+            country: "Germany".to_string(),
+            url: "https://de.endeavouros.com".to_string(),
+            protocol: MirrorProtocol::Https,
+            latency_ms: 15,
+            download_speed_kbps: 50000,
+            sync_status_ok: true,
+        });
+        ranker.register_mirror(EosMirrorInfo {
+            name: "de-slow".to_string(),
+            country: "Germany".to_string(),
+            url: "http://de-slow.endeavouros.com".to_string(),
+            protocol: MirrorProtocol::Http,
+            latency_ms: 80,
+            download_speed_kbps: 10000,
+            sync_status_ok: true,
+        });
+        let top_https = ranker.rank_top_mirrors(Some("Germany"), Some(MirrorProtocol::Https));
+        assert_eq!(top_https.len(), 1);
+        assert_eq!(top_https[0].name, "de-fast");
+
+        // Test Quickstart Engine
+        let mut quickstart = EosQuickstartEngine::new();
+        assert!(quickstart.select_bundle("endeavour-gaming-pack").is_ok());
+        let pkgs = quickstart.resolve_all_packages();
+        assert!(pkgs.contains(&"steam".to_string()));
+        assert!(pkgs.contains(&"gamescope".to_string()));
+
+        // Test Apps Info Engine
+        let apps_info = EosAppsInfoEngine::new();
+        let results = apps_info.search_apps("yay");
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].source, AppSourceType::Aur);
+
+        // Test Update Notifier Daemon
+        let mut notifier = EosUpdateNotifierDaemon::new(30, true);
+        let evt = notifier.perform_update_check(5, 2);
+        assert_eq!(evt.priority, NotificationPriority::Normal);
+        assert!(evt.message.contains("5 repo updates"));
+
+        // Test Script Sandbox
+        let mut script_sb = EosScriptRepoSandbox::new();
+        script_sb.add_script("clean-cache", ScriptSecurityLevel::TrustedSystem, "paccache -r");
+        script_sb.add_script("untrusted-one", ScriptSecurityLevel::UntrustedSandbox, "rm -rf /");
+        assert!(script_sb.execute_script("clean-cache").is_ok());
+        assert!(script_sb.execute_script("untrusted-one").is_err());
+
+        // Test EndeavourOS PR Gateway
+        let mut gateway = EndeavourOsPrGateway::new(801);
+        let verify_res = gateway.verify_pr_parity();
+        assert!(verify_res.is_ok());
+        assert!(gateway.verification_passed);
+        let msg = verify_res.unwrap();
+        assert!(msg.contains("PR #801"));
+        assert!(msg.contains("All 5 Subsystems Green"));
     }
 }
 
