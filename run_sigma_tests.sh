@@ -201,6 +201,13 @@ if [ -f "src/compatibility/sovereign_mint_pr_components_engine.rs" ]; then
     ./build/test_mint_pr_deploy
 fi
 
+if [ -f "src/compatibility/sovereign_elementary_pr_components_engine.rs" ]; then
+    echo "Running Sovereign Elementary OS PR Components Deployment test suite..."
+    mkdir -p build
+    rustc --test src/compatibility/sovereign_elementary_pr_components_engine.rs --edition=2021 -o build/test_elementary_pr_deploy
+    ./build/test_elementary_pr_deploy
+fi
+
 if [ -f "src/creative/effectcraft.rs" ]; then
     echo "Running Sovereign EffectCraft Visual Effects PR test suite..."
     mkdir -p build
