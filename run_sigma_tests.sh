@@ -1276,4 +1276,11 @@ if [ -f "src/creative/deckcraft.rs" ]; then
     ./build/test_deckcraft
 fi
 
+if [ -f "src/distro/kali_linux_github_repo_inspirations_pr.rs" ]; then
+    echo "Running Kali Linux GitHub Repo Inspirations & Security Components PR Suite..."
+    mkdir -p build
+    rustc --test src/distro/kali_linux_github_repo_inspirations_pr.rs --edition=2021 -o build/test_kali_linux_github_repo_pr
+    ./build/test_kali_linux_github_repo_pr
+fi
+
 echo "All SigmaOS test suites completed."
