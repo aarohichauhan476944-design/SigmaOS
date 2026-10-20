@@ -435,6 +435,13 @@ if [ -f "tests/test_string_parser_standalone.rs" ]; then
     ./build/string_parser_test
 fi
 
+if [ -f "src/distro/endeavour_os.rs" ]; then
+    echo "Running EndeavourOS parity & tooling test suite..."
+    mkdir -p build
+    rustc --test src/distro/endeavour_os.rs --edition=2021 -o build/test_endeavour_os
+    ./build/test_endeavour_os
+fi
+
 if [ -f "src/distro/arch.rs" ]; then
     echo "Running Arch Linux parity & tooling test suite..."
     mkdir -p build
