@@ -4,6 +4,8 @@
 // Yay/Paru AUR helper, and AKM Kernel Manager.
 
 use std::format;
+use std::string::String;
+use std::string::ToString;
 use std::vec;
 use std::vec::Vec;
 
@@ -49,6 +51,8 @@ pub struct CalamaresConfig {
     pub desktop: DesktopEnvironment,
     pub partition_type: PartitionType,
     pub enable_swap: bool,
+    pub enable_luks_encryption: bool,
+    pub btrfs_subvolumes: Vec<String>,
     pub target_drive: String,
     pub detected_operating_systems: Vec<DetectedOsEntry>,
     pub username: String,
@@ -62,6 +66,13 @@ impl CalamaresConfig {
             desktop: DesktopEnvironment::KdePlasma,
             partition_type: PartitionType::EraseDiskBtrfs,
             enable_swap: true,
+            enable_luks_encryption: false,
+            btrfs_subvolumes: vec![
+                "@".to_string(),
+                "@home".to_string(),
+                "@cache".to_string(),
+                "@log".to_string(),
+            ],
             target_drive: "/dev/nvme0n1".to_string(),
             detected_operating_systems: Vec::new(),
             username: username.to_string(),
@@ -76,6 +87,23 @@ impl CalamaresConfig {
             partition_path: partition_path.to_string(),
             boot_type: "UEFI".to_string(),
         });
+    }
+
+    pub fn with_luks(&mut self, enable: bool) {
+        self.enable_luks_encryption = enable;
+    }
+
+    /// Returns recommended package list for selected Desktop Environment
+    pub fn get_desktop_packages(&self) -> Vec<&'static str> {
+        match self.desktop {
+            DesktopEnvironment::Xfce => vec!["xfce4", "xfce4-goodies", "lightdm", "lightdm-gtk-greeter"],
+            DesktopEnvironment::KdePlasma => vec!["plasma-meta", "kde-applications-meta", "sddm"],
+            DesktopEnvironment::Gnome => vec!["gnome", "gnome-extra", "gdm"],
+            DesktopEnvironment::I3Gaps => vec!["i3-wm", "i3status", "dmenu", "alacritty"],
+            DesktopEnvironment::Sway => vec!["sway", "waybar", "wofi", "foot"],
+            DesktopEnvironment::Hyprland => vec!["hyprland", "waybar", "rofi-wayland", "kitty"],
+            DesktopEnvironment::NoDesktop => vec!["base", "base-devel", "linux", "linux-firmware"],
+        }
     }
 }
 
@@ -117,16 +145,28 @@ impl CalamaresInstaller {
             DesktopEnvironment::NoDesktop => "Server Headless",
         };
 
+        let luks_str = if self.config.enable_luks_encryption {
+            "LUKS2 Encryption Enabled"
+        } else {
+            "Plaintext Partitioning"
+        };
+
         self.is_completed = true;
 
         Ok(format!(
-            "Calamares Installation Successful!\nMode: {}\nDesktop: {}\nPartitioning: {:?}\nUser: {}\nHostname: {}",
-            mode_str, de_str, self.config.partition_type, self.config.username, self.config.hostname
+            "Calamares Installation Successful!\nMode: {}\nDesktop: {}\nPartitioning: {:?}\nSecurity: {}\nSubvolumes: {}\nUser: {}\nHostname: {}",
+            mode_str,
+            de_str,
+            self.config.partition_type,
+            luks_str,
+            self.config.btrfs_subvolumes.join(", "),
+            self.config.username,
+            self.config.hostname
         ))
     }
 }
 
-/// Welcome Application Action Buttons
+/// Welcome Application Action Tasks
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WelcomeButtonTask {
     UpdateMirrors,
@@ -134,6 +174,10 @@ pub enum WelcomeButtonTask {
     CleanPackages,
     FixKeys,
     ViewLogs,
+    LaunchReflectorGui,
+    LaunchAkm,
+    LaunchSysInfo,
+    LaunchEosApps,
 }
 
 /// EOS Welcome Application Engine
@@ -146,7 +190,7 @@ impl EosWelcomeApp {
         Self { first_run: true }
     }
 
-    /// Handles quick maintenance buttons from the EOS Welcome GUI
+    /// Handles quick maintenance buttons and quickstart app launchers from the EOS Welcome GUI
     pub fn execute_task(&mut self, task: WelcomeButtonTask) -> Result<String, &'static str> {
         match task {
             WelcomeButtonTask::UpdateMirrors => {
@@ -163,6 +207,18 @@ impl EosWelcomeApp {
             }
             WelcomeButtonTask::ViewLogs => {
                 Ok("EOS Log Tool: Diagnostic system logs generated.".to_string())
+            }
+            WelcomeButtonTask::LaunchReflectorGui => {
+                Ok("Reflector Simple GUI: Terminal mirror ranker initialized.".to_string())
+            }
+            WelcomeButtonTask::LaunchAkm => {
+                Ok("AKM GUI: Arch Kernel Manager initialized.".to_string())
+            }
+            WelcomeButtonTask::LaunchSysInfo => {
+                Ok("eos-quickstart: Hardware & OS specifications retrieved.".to_string())
+            }
+            WelcomeButtonTask::LaunchEosApps => {
+                Ok("EOS App Store: Native utility index loaded.".to_string())
             }
         }
     }
@@ -182,6 +238,18 @@ impl EosLogTool {
         Self
     }
 
+    /// Generates a unified diagnostic report combining system logs, hardware info, and boot state
+    pub fn generate_system_diagnostic_report(
+        &self,
+        hardware_info: &str,
+        journal_trace: &str,
+    ) -> String {
+        format!(
+            "--- EndeavourOS Diagnostic Log ---\n[Hardware Specs]: {}\n[Journalctl Trace]: {}\n--- End of Report ---",
+            hardware_info, journal_trace
+        )
+    }
+
     /// Simulates uploading hardware, journalctl, and Xorg logs to a pastebin URL
     pub fn upload_system_logs(&self, log_content: &str) -> Result<String, &'static str> {
         if log_content.is_empty() {
@@ -196,112 +264,6 @@ impl EosLogTool {
 impl Default for EosLogTool {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-#[cfg(test)]
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_calamares_installer() {
-        let mut config = CalamaresConfig::new("endeavour_user", "eos-laptop");
-        config.with_dual_boot("Windows 11 Pro", "/dev/nvme0n1p3");
-
-        let mut installer = CalamaresInstaller::new(config);
-        assert!(!installer.is_completed);
-        assert_eq!(
-            installer.config.partition_type,
-            PartitionType::DualBootSideBySide
-        );
-        assert_eq!(installer.config.detected_operating_systems.len(), 1);
-
-        let res = installer.run_installation();
-        assert!(res.is_ok());
-        assert!(installer.is_completed);
-        let msg = res.unwrap();
-        assert!(msg.contains("endeavour_user"));
-        assert!(msg.contains("eos-laptop"));
-    }
-
-    #[test]
-    fn test_eos_welcome_app_and_log_tool() {
-        let mut welcome = EosWelcomeApp::new();
-        assert!(welcome
-            .execute_task(WelcomeButtonTask::UpdateMirrors)
-            .is_ok());
-        assert!(welcome
-            .execute_task(WelcomeButtonTask::UpdateSystem)
-            .is_ok());
-        assert!(welcome
-            .execute_task(WelcomeButtonTask::CleanPackages)
-            .is_ok());
-        assert!(welcome.execute_task(WelcomeButtonTask::FixKeys).is_ok());
-
-        let log_tool = EosLogTool::new();
-        let upload_res =
-            log_tool.upload_system_logs("Hardware: AMD Ryzen 7 7840HS, GPU: Radeon 780M");
-        assert!(upload_res.is_ok());
-        assert!(upload_res.unwrap().contains("https://0x0.st/"));
-    }
-
-    #[test]
-    fn test_reflector_mirror_manager() {
-        let mut reflector = ReflectorMirrorManager::new();
-        reflector.add_mirror(PacmanMirror {
-            country: "Germany".to_string(),
-            url: "https://mirror.archlinux.de".to_string(),
-            latency_ms: 120,
-            speed_kbps: 5000,
-        });
-        reflector.add_mirror(PacmanMirror {
-            country: "Germany".to_string(),
-            url: "https://fast.archlinux.de".to_string(),
-            latency_ms: 45,
-            speed_kbps: 15000,
-        });
-        reflector.add_mirror(PacmanMirror {
-            country: "USA".to_string(),
-            url: "https://us.mirror.archlinux.org".to_string(),
-            latency_ms: 200,
-            speed_kbps: 8000,
-        });
-
-        let ranked_de = reflector.rank_mirrors(Some("Germany"));
-        assert_eq!(ranked_de.len(), 2);
-        assert_eq!(ranked_de[0].url, "https://fast.archlinux.de"); // Lowest latency first
-    }
-
-    #[test]
-    fn test_yay_paru_helper() {
-        let mut helper = YayParuHelper::new();
-        helper.register_aur_package(AurPackageSpec {
-            name: "visual-studio-code-bin".to_string(),
-            version: "1.89.0-1".to_string(),
-            pkgbuild_url: "https://aur.archlinux.org/visual-studio-code-bin.git".to_string(),
-            votes: 1250,
-        });
-
-        let build_res = helper.build_and_install("visual-studio-code-bin");
-        assert!(build_res.is_ok());
-        assert!(build_res.unwrap().contains("visual-studio-code-bin"));
-
-        assert!(helper.build_and_install("nonexistent-pkg").is_err());
-    }
-
-    #[test]
-    fn test_akm_kernel_manager() {
-        let mut akm = AkmKernelManager::new();
-        assert_eq!(akm.current_kernel, EosKernelFlavor::LinuxStable);
-
-        // Cannot switch to uninstalled kernel
-        assert!(akm.switch_active_kernel(EosKernelFlavor::LinuxZen).is_err());
-
-        // Install and switch to LinuxZen
-        akm.install_kernel(EosKernelFlavor::LinuxZen);
-        assert!(akm.switch_active_kernel(EosKernelFlavor::LinuxZen).is_ok());
-        assert_eq!(akm.current_kernel, EosKernelFlavor::LinuxZen);
     }
 }
 
@@ -354,6 +316,18 @@ impl ReflectorMirrorManager {
 
         filtered
     }
+
+    /// Generates a pacman mirrorlist configuration format string
+    pub fn generate_pacman_mirrorlist(&self, country_filter: Option<&str>, top_n: usize) -> String {
+        let ranked = self.rank_mirrors(country_filter);
+        let mut mirrorlist = String::from("## EndeavourOS & Arch Linux Ranked Mirrorlist\n");
+
+        for mirror in ranked.iter().take(top_n) {
+            mirrorlist.push_str(&format!("Server = {}/$repo/os/$arch\n", mirror.url));
+        }
+
+        mirrorlist
+    }
 }
 
 impl Default for ReflectorMirrorManager {
@@ -403,6 +377,16 @@ impl YayParuHelper {
             Err("AUR Package not found in registry.")
         }
     }
+
+    /// Batch builds multiple AUR packages
+    pub fn build_batch(&self, pkg_names: &[&str]) -> Result<Vec<String>, &'static str> {
+        let mut results = Vec::new();
+        for name in pkg_names {
+            let res = self.build_and_install(name)?;
+            results.push(res);
+        }
+        Ok(results)
+    }
 }
 
 impl Default for YayParuHelper {
@@ -440,6 +424,20 @@ impl AkmKernelManager {
         }
     }
 
+    pub fn uninstall_kernel(&mut self, flavor: EosKernelFlavor) -> Result<String, &'static str> {
+        if !self.installed_kernels.contains(&flavor) {
+            return Err("Kernel flavor not installed.");
+        }
+        if self.installed_kernels.len() <= 1 {
+            return Err("Cannot uninstall the only installed kernel flavor.");
+        }
+        if self.current_kernel == flavor {
+            return Err("Cannot uninstall the currently active kernel flavor.");
+        }
+        self.installed_kernels.retain(|&k| k != flavor);
+        Ok(format!("AKM: Successfully uninstalled kernel {:?}", flavor))
+    }
+
     /// Switches the default boot kernel in GRUB/systemd-boot
     pub fn switch_active_kernel(
         &mut self,
@@ -454,10 +452,151 @@ impl AkmKernelManager {
             flavor
         ))
     }
+
+    /// Generates bootloader entry string for the active kernel
+    pub fn generate_bootloader_config(&self) -> String {
+        let k_str = match self.current_kernel {
+            EosKernelFlavor::LinuxStable => "vmlinuz-linux",
+            EosKernelFlavor::LinuxLts => "vmlinuz-linux-lts",
+            EosKernelFlavor::LinuxZen => "vmlinuz-linux-zen",
+            EosKernelFlavor::LinuxHardened => "vmlinuz-linux-hardened",
+        };
+        format!("title EndeavourOS ({:?})\nlinux /boot/{}\ninitrd /boot/initramfs-{}.img\noptions root=UUID=xxxx rw quiet", self.current_kernel, k_str, k_str)
+    }
 }
 
 impl Default for AkmKernelManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calamares_installer() {
+        let mut config = CalamaresConfig::new("endeavour_user", "eos-laptop");
+        config.with_dual_boot("Windows 11 Pro", "/dev/nvme0n1p3");
+        config.with_luks(true);
+
+        assert_eq!(config.get_desktop_packages().len(), 3); // KDE Plasma 6: plasma-meta, kde-applications-meta, sddm
+
+        let mut installer = CalamaresInstaller::new(config);
+        assert!(!installer.is_completed);
+        assert_eq!(
+            installer.config.partition_type,
+            PartitionType::DualBootSideBySide
+        );
+        assert_eq!(installer.config.detected_operating_systems.len(), 1);
+
+        let res = installer.run_installation();
+        assert!(res.is_ok());
+        assert!(installer.is_completed);
+        let msg = res.unwrap();
+        assert!(msg.contains("endeavour_user"));
+        assert!(msg.contains("eos-laptop"));
+        assert!(msg.contains("LUKS2 Encryption Enabled"));
+    }
+
+    #[test]
+    fn test_eos_welcome_app_and_log_tool() {
+        let mut welcome = EosWelcomeApp::new();
+        assert!(welcome
+            .execute_task(WelcomeButtonTask::UpdateMirrors)
+            .is_ok());
+        assert!(welcome
+            .execute_task(WelcomeButtonTask::UpdateSystem)
+            .is_ok());
+        assert!(welcome
+            .execute_task(WelcomeButtonTask::CleanPackages)
+            .is_ok());
+        assert!(welcome.execute_task(WelcomeButtonTask::FixKeys).is_ok());
+        assert!(welcome.execute_task(WelcomeButtonTask::LaunchReflectorGui).is_ok());
+        assert!(welcome.execute_task(WelcomeButtonTask::LaunchAkm).is_ok());
+
+        let log_tool = EosLogTool::new();
+        let report = log_tool.generate_system_diagnostic_report("Ryzen 7 7840HS", "System booted normally.");
+        assert!(report.contains("Ryzen 7 7840HS"));
+
+        let upload_res = log_tool.upload_system_logs(&report);
+        assert!(upload_res.is_ok());
+        assert!(upload_res.unwrap().contains("https://0x0.st/"));
+    }
+
+    #[test]
+    fn test_reflector_mirror_manager() {
+        let mut reflector = ReflectorMirrorManager::new();
+        reflector.add_mirror(PacmanMirror {
+            country: "Germany".to_string(),
+            url: "https://mirror.archlinux.de".to_string(),
+            latency_ms: 120,
+            speed_kbps: 5000,
+        });
+        reflector.add_mirror(PacmanMirror {
+            country: "Germany".to_string(),
+            url: "https://fast.archlinux.de".to_string(),
+            latency_ms: 45,
+            speed_kbps: 15000,
+        });
+        reflector.add_mirror(PacmanMirror {
+            country: "USA".to_string(),
+            url: "https://us.mirror.archlinux.org".to_string(),
+            latency_ms: 200,
+            speed_kbps: 8000,
+        });
+
+        let ranked_de = reflector.rank_mirrors(Some("Germany"));
+        assert_eq!(ranked_de.len(), 2);
+        assert_eq!(ranked_de[0].url, "https://fast.archlinux.de"); // Lowest latency first
+
+        let mirrorlist = reflector.generate_pacman_mirrorlist(Some("Germany"), 1);
+        assert!(mirrorlist.contains("Server = https://fast.archlinux.de/$repo/os/$arch"));
+    }
+
+    #[test]
+    fn test_yay_paru_helper() {
+        let mut helper = YayParuHelper::new();
+        helper.register_aur_package(AurPackageSpec {
+            name: "visual-studio-code-bin".to_string(),
+            version: "1.89.0-1".to_string(),
+            pkgbuild_url: "https://aur.archlinux.org/visual-studio-code-bin.git".to_string(),
+            votes: 1250,
+        });
+
+        let build_res = helper.build_and_install("visual-studio-code-bin");
+        assert!(build_res.is_ok());
+        assert!(build_res.unwrap().contains("visual-studio-code-bin"));
+
+        assert!(helper.build_and_install("nonexistent-pkg").is_err());
+
+        let batch_res = helper.build_batch(&["visual-studio-code-bin"]);
+        assert!(batch_res.is_ok());
+        assert_eq!(batch_res.unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_akm_kernel_manager() {
+        let mut akm = AkmKernelManager::new();
+        assert_eq!(akm.current_kernel, EosKernelFlavor::LinuxStable);
+
+        // Cannot switch to uninstalled kernel
+        assert!(akm.switch_active_kernel(EosKernelFlavor::LinuxZen).is_err());
+
+        // Cannot uninstall single kernel or active kernel
+        assert!(akm.uninstall_kernel(EosKernelFlavor::LinuxStable).is_err());
+
+        // Install and switch to LinuxZen
+        akm.install_kernel(EosKernelFlavor::LinuxZen);
+        assert!(akm.switch_active_kernel(EosKernelFlavor::LinuxZen).is_ok());
+        assert_eq!(akm.current_kernel, EosKernelFlavor::LinuxZen);
+
+        // Uninstall LinuxStable now that LinuxZen is active and installed
+        assert!(akm.uninstall_kernel(EosKernelFlavor::LinuxStable).is_ok());
+        assert_eq!(akm.installed_kernels.len(), 1);
+
+        let boot_cfg = akm.generate_bootloader_config();
+        assert!(boot_cfg.contains("vmlinuz-linux-zen"));
     }
 }
