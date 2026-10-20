@@ -4,8 +4,10 @@
 
 extern crate alloc;
 
-use alloc::collections::BTreeMap;
-use alloc::string::String;
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::format;
+use alloc::string::{String, ToString};
+use alloc::vec;
 use alloc::vec::Vec;
 
 /// Portage error types
@@ -133,6 +135,275 @@ impl UseFlagManager {
 impl Default for UseFlagManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+// ==========================================
+// GENTOO PORTAGE ADVANCEMENTS & PARITY ENGINES
+// ==========================================
+
+/// Gentoo Package Set Kind (@world, @system, @selected, @profile, or custom @set)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GentooPackageSetKind {
+    World,
+    System,
+    Selected,
+    Profile,
+    Custom(String),
+}
+
+/// Gentoo Portage Package Sets Manager (`@world`, `@system`, `@selected`)
+pub struct GentooPackageSetManager {
+    pub sets: BTreeMap<String, BTreeSet<String>>,
+}
+
+impl GentooPackageSetManager {
+    pub fn new() -> Self {
+        let mut mgr = Self {
+            sets: BTreeMap::new(),
+        };
+        // Seed standard Gentoo sets
+        mgr.sets.insert("system".to_string(), BTreeSet::new());
+        mgr.sets.insert("selected".to_string(), BTreeSet::new());
+        mgr.sets.insert("world".to_string(), BTreeSet::new());
+
+        // Populate standard system set defaults
+        mgr.add_to_set("system", "sys-apps/baselayout");
+        mgr.add_to_set("system", "sys-apps/portage");
+        mgr.add_to_set("system", "sys-libs/glibc");
+        mgr
+    }
+
+    pub fn add_to_set(&mut self, set_name: &str, package: &str) {
+        let set = self.sets.entry(set_name.to_string()).or_default();
+        set.insert(package.to_string());
+
+        if set_name == "selected" || set_name == "system" {
+            // World set includes both system and explicitly selected packages
+            if let Some(world) = self.sets.get_mut("world") {
+                world.insert(package.to_string());
+            }
+        }
+    }
+
+    pub fn remove_from_set(&mut self, set_name: &str, package: &str) -> bool {
+        if let Some(set) = self.sets.get_mut(set_name) {
+            let removed = set.remove(package);
+            if removed && set_name == "selected" {
+                // Rebuild world set from remaining selected + system
+                let system_pkgs = self.sets.get("system").cloned().unwrap_or_default();
+                let selected_pkgs = self.sets.get("selected").cloned().unwrap_or_default();
+                if let Some(world) = self.sets.get_mut("world") {
+                    *world = system_pkgs.union(&selected_pkgs).cloned().collect();
+                }
+            }
+            removed
+        } else {
+            false
+        }
+    }
+
+    pub fn get_set(&self, set_name: &str) -> Vec<String> {
+        self.sets
+            .get(set_name)
+            .map(|s| s.iter().cloned().collect())
+            .unwrap_or_default()
+    }
+}
+
+impl Default for GentooPackageSetManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Gentoo `etc-update` / `dispatch-conf` Configuration Merge Action
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ConfigMergeAction {
+    UseNew,
+    KeepCurrent,
+    InteractiveMerge,
+    DiffSummary,
+}
+
+/// Pending Configuration Update Entry (e.g. `._cfg0000_net.conf`)
+#[derive(Debug, Clone)]
+pub struct PendingConfigUpdate {
+    pub target_file: String,
+    pub pending_file: String,
+    pub current_content: String,
+    pub new_content: String,
+}
+
+/// Gentoo `etc-update` / `dispatch-conf` Engine
+pub struct GentooConfigMergeEngine {
+    pub pending_updates: Vec<PendingConfigUpdate>,
+}
+
+impl GentooConfigMergeEngine {
+    pub fn new() -> Self {
+        Self {
+            pending_updates: Vec::new(),
+        }
+    }
+
+    pub fn register_pending_update(
+        &mut self,
+        target_file: &str,
+        current_content: &str,
+        new_content: &str,
+    ) {
+        let pending_file = format!("._cfg0000_{}", target_file);
+        self.pending_updates.push(PendingConfigUpdate {
+            target_file: target_file.to_string(),
+            pending_file,
+            current_content: current_content.to_string(),
+            new_content: new_content.to_string(),
+        });
+    }
+
+    pub fn count_pending(&self) -> usize {
+        self.pending_updates.len()
+    }
+
+    pub fn resolve_update(
+        &mut self,
+        target_file: &str,
+        action: ConfigMergeAction,
+    ) -> Result<String, PortageError> {
+        let pos = self
+            .pending_updates
+            .iter()
+            .position(|u| u.target_file == target_file)
+            .ok_or(PortageError::PackageNotFound)?;
+
+        let update = self.pending_updates.remove(pos);
+        match action {
+            ConfigMergeAction::UseNew => Ok(update.new_content),
+            ConfigMergeAction::KeepCurrent => Ok(update.current_content),
+            ConfigMergeAction::InteractiveMerge | ConfigMergeAction::DiffSummary => {
+                let merged = format!(
+                    "# --- MERGED CONFIG ({}) ---\n{}\n# --- END MERGED ---",
+                    target_file, update.new_content
+                );
+                Ok(merged)
+            }
+        }
+    }
+}
+
+impl Default for GentooConfigMergeEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Gentoo `eclean` Source Distfile & Binary Package Cleanup Engine
+pub struct GentooEcleanEngine {
+    pub distfiles: BTreeMap<String, (u64, bool)>, // filename -> (size_bytes, is_obsolete)
+    pub binpkgs: BTreeMap<String, (u64, bool)>,  // pkg_tarball -> (size_bytes, is_obsolete)
+}
+
+impl GentooEcleanEngine {
+    pub fn new() -> Self {
+        Self {
+            distfiles: BTreeMap::new(),
+            binpkgs: BTreeMap::new(),
+        }
+    }
+
+    pub fn register_distfile(&mut self, filename: &str, size_bytes: u64, is_obsolete: bool) {
+        self.distfiles
+            .insert(filename.to_string(), (size_bytes, is_obsolete));
+    }
+
+    pub fn register_binpkg(&mut self, pkg_name: &str, size_bytes: u64, is_obsolete: bool) {
+        self.binpkgs
+            .insert(pkg_name.to_string(), (size_bytes, is_obsolete));
+    }
+
+    pub fn eclean_distfiles(&mut self) -> (usize, u64) {
+        let obsolete_keys: Vec<String> = self
+            .distfiles
+            .iter()
+            .filter(|(_, (_, obs))| *obs)
+            .map(|(k, _)| k.clone())
+            .collect();
+
+        let mut freed_bytes = 0u64;
+        let freed_count = obsolete_keys.len();
+        for k in obsolete_keys {
+            if let Some((sz, _)) = self.distfiles.remove(&k) {
+                freed_bytes += sz;
+            }
+        }
+        (freed_count, freed_bytes)
+    }
+
+    pub fn eclean_pkg(&mut self) -> (usize, u64) {
+        let obsolete_keys: Vec<String> = self
+            .binpkgs
+            .iter()
+            .filter(|(_, (_, obs))| *obs)
+            .map(|(k, _)| k.clone())
+            .collect();
+
+        let mut freed_bytes = 0u64;
+        let freed_count = obsolete_keys.len();
+        for k in obsolete_keys {
+            if let Some((sz, _)) = self.binpkgs.remove(&k) {
+                freed_bytes += sz;
+            }
+        }
+        (freed_count, freed_bytes)
+    }
+}
+
+impl Default for GentooEcleanEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Gentoo Binary Package Host (binhost) Client Engine
+#[derive(Debug, Clone)]
+pub struct GentooBinpkgMetadata {
+    pub package_atom: String,
+    pub version: String,
+    pub use_flags: Vec<String>,
+    pub sha256_checksum: String,
+    pub size_bytes: u64,
+}
+
+pub struct GentooBinhostEngine {
+    pub binhost_url: String,
+    pub available_binpkgs: BTreeMap<String, GentooBinpkgMetadata>,
+}
+
+impl GentooBinhostEngine {
+    pub fn new(binhost_url: &str) -> Self {
+        Self {
+            binhost_url: binhost_url.to_string(),
+            available_binpkgs: BTreeMap::new(),
+        }
+    }
+
+    pub fn register_binpkg(&mut self, meta: GentooBinpkgMetadata) {
+        self.available_binpkgs
+            .insert(meta.package_atom.clone(), meta);
+    }
+
+    pub fn verify_and_fetch(&self, package_atom: &str, expected_hash: &str) -> Result<&GentooBinpkgMetadata, PortageError> {
+        let meta = self
+            .available_binpkgs
+            .get(package_atom)
+            .ok_or(PortageError::PackageNotFound)?;
+
+        if meta.sha256_checksum == expected_hash {
+            Ok(meta)
+        } else {
+            Err(PortageError::FetchFailed)
+        }
     }
 }
 
@@ -405,5 +676,68 @@ mod tests {
 
         let flags = manager.resolve_for_package(&ebuild).unwrap();
         assert!(flags.contains(&"X".to_string()));
+    }
+
+    #[test]
+    fn test_gentoo_package_sets() {
+        let mut sets = GentooPackageSetManager::new();
+        assert!(sets.get_set("system").contains(&"sys-apps/portage".to_string()));
+
+        sets.add_to_set("selected", "app-editors/neovim");
+        let world = sets.get_set("world");
+        assert!(world.contains(&"app-editors/neovim".to_string()));
+        assert!(world.contains(&"sys-apps/portage".to_string()));
+
+        assert!(sets.remove_from_set("selected", "app-editors/neovim"));
+        assert!(!sets.get_set("world").contains(&"app-editors/neovim".to_string()));
+    }
+
+    #[test]
+    fn test_gentoo_config_merge() {
+        let mut merger = GentooConfigMergeEngine::new();
+        merger.register_pending_update("/etc/portage/make.conf", "CFLAGS=\"-O2\"", "CFLAGS=\"-O3 -march=native\"");
+        assert_eq!(merger.count_pending(), 1);
+
+        let resolved = merger.resolve_update("/etc/portage/make.conf", ConfigMergeAction::UseNew).unwrap();
+        assert_eq!(resolved, "CFLAGS=\"-O3 -march=native\"");
+        assert_eq!(merger.count_pending(), 0);
+    }
+
+    #[test]
+    fn test_gentoo_eclean_engine() {
+        let mut eclean = GentooEcleanEngine::new();
+        eclean.register_distfile("gcc-13.2.0.tar.xz", 150_000_000, true);
+        eclean.register_distfile("linux-6.6.tar.xz", 140_000_000, false);
+        eclean.register_binpkg("sys-apps/bash-5.2.tbz2", 5_000_000, true);
+
+        let (freed_dist_count, freed_dist_bytes) = eclean.eclean_distfiles();
+        assert_eq!(freed_dist_count, 1);
+        assert_eq!(freed_dist_bytes, 150_000_000);
+
+        let (freed_pkg_count, freed_pkg_bytes) = eclean.eclean_pkg();
+        assert_eq!(freed_pkg_count, 1);
+        assert_eq!(freed_pkg_bytes, 5_000_000);
+    }
+
+    #[test]
+    fn test_gentoo_binhost_engine() {
+        let mut binhost = GentooBinhostEngine::new("https://binhost.sigmaos.org");
+        binhost.register_binpkg(GentooBinpkgMetadata {
+            package_atom: "sys-apps/coreutils-9.4".to_string(),
+            version: "9.4".to_string(),
+            use_flags: vec!["nls".to_string()],
+            sha256_checksum: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_string(),
+            size_bytes: 12_000_000,
+        });
+
+        let pkg = binhost.verify_and_fetch(
+            "sys-apps/coreutils-9.4",
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        );
+        assert!(pkg.is_ok());
+        assert_eq!(pkg.unwrap().size_bytes, 12_000_000);
+
+        let bad_hash = binhost.verify_and_fetch("sys-apps/coreutils-9.4", "invalid_hash");
+        assert!(bad_hash.is_err());
     }
 }
