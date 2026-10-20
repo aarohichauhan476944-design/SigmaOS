@@ -47,6 +47,8 @@ pub use system_tools::{
     get_system_tools_manager, init_system_tools_manager, SystemTool, SystemToolsManager,
 };
 pub mod omarchy_future_roadmap;
+pub mod omarchy_github_repo_inspirations_pr;
+pub use omarchy_github_repo_inspirations_pr::*;
 pub mod omarchy_linux_gap_closure_pr_suite;
 pub use omarchy_linux_gap_closure_pr_suite::*;
 pub mod sovereign_gap_closure_master_suite;
