@@ -21,6 +21,7 @@
 //   - Kali Linux tool metapackages         -> `KaliMetapackage`
 //   - Raspberry Pi OS raspi-config         -> `RaspiConfigTool`
 //   - Puppy Linux SAVE-file / SFS layers   -> `PuppySaveSession` / `WoofCeLayer`
+//   - Parrot Security OS                   -> `ParrotAnonsurf` / `ParrotMetapackage` / `ParrotSandbox` / `ParrotCryptVault`
 
 use std::collections::BTreeMap;
 use std::format;
@@ -75,6 +76,306 @@ impl BlackarchCategory {
             BlackarchCategory::Crypto => "blackarch-cryptography",
             BlackarchCategory::Automation => "blackarch-automation",
         }
+    }
+}
+
+// =========================================================================
+// 17. PARROT OS -> ParrotAnonsurf / ParrotMetapackage / ParrotSandbox / ParrotCryptVault
+//    Parrot Security OS features system-wide Anonsurf anonymous routing via Tor,
+//    strict category metapackages, sandboxed tool execution, and encrypted
+//    forensic vaults.
+// =========================================================================
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AnonsurfMode {
+    Tor,
+    I2p,
+}
+
+pub struct ParrotAnonsurf {
+    pub active: bool,
+    pub mode: AnonsurfMode,
+    pub killswitch_enabled: bool,
+    pub dns_protection_enabled: bool,
+    pub ram_wipe_on_stop: bool,
+    pub current_exit_node: Option<String>,
+}
+
+impl ParrotAnonsurf {
+    pub fn new() -> Self {
+        Self {
+            active: false,
+            mode: AnonsurfMode::Tor,
+            killswitch_enabled: true,
+            dns_protection_enabled: true,
+            ram_wipe_on_stop: true,
+            current_exit_node: None,
+        }
+    }
+
+    pub fn start(&mut self) -> Result<(), &'static str> {
+        if self.active {
+            return Err("Anonsurf already active");
+        }
+        self.active = true;
+        self.current_exit_node = Some("185.220.101.5".to_string());
+        Ok(())
+    }
+
+    pub fn stop(&mut self) -> Result<bool, &'static str> {
+        if !self.active {
+            return Err("Anonsurf is not running");
+        }
+        self.active = false;
+        self.current_exit_node = None;
+        let wiped_ram = self.ram_wipe_on_stop;
+        Ok(wiped_ram)
+    }
+
+    pub fn change_identity(&mut self) -> Result<String, &'static str> {
+        if !self.active {
+            return Err("Cannot change identity when Anonsurf is stopped");
+        }
+        let new_node = "185.220.102.10".to_string();
+        self.current_exit_node = Some(new_node.clone());
+        Ok(new_node)
+    }
+
+    pub fn verify_traffic_allowed(&self) -> bool {
+        if self.killswitch_enabled && !self.active {
+            false
+        } else {
+            true
+        }
+    }
+}
+
+impl Default for ParrotAnonsurf {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parrot_anonsurf_and_metapackage() {
+        let mut anonsurf = ParrotAnonsurf::new();
+        assert_eq!(anonsurf.mode, AnonsurfMode::Tor);
+        assert!(!anonsurf.active);
+        assert!(!anonsurf.verify_traffic_allowed());
+
+        assert!(anonsurf.start().is_ok());
+        assert!(anonsurf.active);
+        assert!(anonsurf.verify_traffic_allowed());
+        assert_eq!(anonsurf.current_exit_node.as_deref(), Some("185.220.101.5"));
+
+        let new_node = anonsurf.change_identity().unwrap();
+        assert_eq!(new_node, "185.220.102.10");
+
+        let wiped = anonsurf.stop().unwrap();
+        assert!(wiped);
+        assert!(!anonsurf.active);
+
+        let mut meta = ParrotMetapackage::new(ParrotCategory::CoreSecurity);
+        meta.add_tool("nmap");
+        meta.add_tool("wireshark");
+        assert_eq!(meta.tool_count(), 2);
+        assert!(meta.contains_tool("nmap"));
+        assert_eq!(ParrotCategory::CoreSecurity.package_name(), "parrot-security");
+        assert_eq!(ParrotCategory::Pwn.package_name(), "parrot-tools-pwn");
+    }
+
+    #[test]
+    fn test_parrot_sandbox_and_crypt_vault() {
+        let sandbox = ParrotSandbox::new(SandboxLevel::StrictNoNetwork);
+        assert!(!sandbox.is_syscall_allowed("socket"));
+        assert!(!sandbox.is_syscall_allowed("connect"));
+        assert!(sandbox.is_syscall_allowed("read"));
+        assert!(sandbox.is_path_isolated("/home/user/documents"));
+
+        let mut vault = ParrotCryptVault::new();
+        assert!(vault.create_vault("forensic_artifacts", "/mnt/vault", 0xDEADBEEF).is_ok());
+        assert!(vault.create_vault("forensic_artifacts", "/mnt/vault", 0xDEADBEEF).is_err());
+
+        assert!(vault.mount_vault("forensic_artifacts", 0xBAD1010).is_err());
+        assert!(vault.mount_vault("forensic_artifacts", 0xDEADBEEF).is_ok());
+        assert!(vault.is_mounted("forensic_artifacts"));
+
+        assert!(vault.unmount_vault("forensic_artifacts").is_ok());
+        assert!(!vault.is_mounted("forensic_artifacts"));
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ParrotCategory {
+    CoreSecurity,
+    Home,
+    Pwn,
+    Forensics,
+    Privacy,
+}
+
+impl ParrotCategory {
+    pub fn package_name(&self) -> &'static str {
+        match self {
+            ParrotCategory::CoreSecurity => "parrot-security",
+            ParrotCategory::Home => "parrot-home",
+            ParrotCategory::Pwn => "parrot-tools-pwn",
+            ParrotCategory::Forensics => "parrot-tools-forensics",
+            ParrotCategory::Privacy => "parrot-privacy",
+        }
+    }
+}
+
+pub struct ParrotMetapackage {
+    pub category: ParrotCategory,
+    pub tools: Vec<String>,
+}
+
+impl ParrotMetapackage {
+    pub fn new(category: ParrotCategory) -> Self {
+        Self {
+            category,
+            tools: Vec::new(),
+        }
+    }
+
+    pub fn add_tool(&mut self, tool: &str) {
+        self.tools.push(tool.to_string());
+    }
+
+    pub fn contains_tool(&self, tool: &str) -> bool {
+        self.tools.iter().any(|t| t == tool)
+    }
+
+    pub fn tool_count(&self) -> usize {
+        self.tools.len()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SandboxLevel {
+    StrictNoNetwork,
+    RestrictedNetwork,
+    IsolatedFilesystem,
+}
+
+pub struct ParrotSandbox {
+    pub level: SandboxLevel,
+    pub blocked_syscalls: Vec<String>,
+    pub isolated_paths: Vec<String>,
+}
+
+impl ParrotSandbox {
+    pub fn new(level: SandboxLevel) -> Self {
+        let mut blocked_syscalls = Vec::new();
+        let mut isolated_paths = Vec::new();
+
+        match level {
+            SandboxLevel::StrictNoNetwork => {
+                blocked_syscalls.push("socket".to_string());
+                blocked_syscalls.push("connect".to_string());
+                isolated_paths.push("/home/user".to_string());
+            }
+            SandboxLevel::RestrictedNetwork => {
+                blocked_syscalls.push("bind".to_string());
+                isolated_paths.push("/home/user/private".to_string());
+            }
+            SandboxLevel::IsolatedFilesystem => {
+                isolated_paths.push("/etc".to_string());
+                isolated_paths.push("/var".to_string());
+            }
+        }
+
+        Self {
+            level,
+            blocked_syscalls,
+            isolated_paths,
+        }
+    }
+
+    pub fn is_syscall_allowed(&self, syscall: &str) -> bool {
+        !self.blocked_syscalls.iter().any(|s| s == syscall)
+    }
+
+    pub fn is_path_isolated(&self, path: &str) -> bool {
+        self.isolated_paths.iter().any(|p| path.starts_with(p))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EncryptedVault {
+    pub name: String,
+    pub mount_point: String,
+    pub is_mounted: bool,
+    pub key_hash: u64,
+}
+
+pub struct ParrotCryptVault {
+    pub vaults: BTreeMap<String, EncryptedVault>,
+}
+
+impl ParrotCryptVault {
+    pub fn new() -> Self {
+        Self {
+            vaults: BTreeMap::new(),
+        }
+    }
+
+    pub fn create_vault(&mut self, name: &str, mount_point: &str, key_hash: u64) -> Result<(), &'static str> {
+        if self.vaults.contains_key(name) {
+            return Err("Vault with this name already exists");
+        }
+        self.vaults.insert(
+            name.to_string(),
+            EncryptedVault {
+                name: name.to_string(),
+                mount_point: mount_point.to_string(),
+                is_mounted: false,
+                key_hash,
+            },
+        );
+        Ok(())
+    }
+
+    pub fn mount_vault(&mut self, name: &str, provided_key_hash: u64) -> Result<(), &'static str> {
+        if let Some(vault) = self.vaults.get_mut(name) {
+            if vault.is_mounted {
+                return Err("Vault is already mounted");
+            }
+            if vault.key_hash != provided_key_hash {
+                return Err("Invalid passphrase key hash");
+            }
+            vault.is_mounted = true;
+            Ok(())
+        } else {
+            Err("Vault not found")
+        }
+    }
+
+    pub fn unmount_vault(&mut self, name: &str) -> Result<(), &'static str> {
+        if let Some(vault) = self.vaults.get_mut(name) {
+            if !vault.is_mounted {
+                return Err("Vault is not mounted");
+            }
+            vault.is_mounted = false;
+            Ok(())
+        } else {
+            Err("Vault not found")
+        }
+    }
+
+    pub fn is_mounted(&self, name: &str) -> bool {
+        self.vaults.get(name).map(|v| v.is_mounted).unwrap_or(false)
+    }
+}
+
+impl Default for ParrotCryptVault {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
