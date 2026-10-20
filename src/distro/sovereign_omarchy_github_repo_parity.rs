@@ -23,6 +23,8 @@ pub enum OmarchyThemeName {
     Nord,
     Everforest,
     Kanagawa,
+    RosePine,
+    Dracula,
 }
 
 impl OmarchyThemeName {
@@ -34,6 +36,8 @@ impl OmarchyThemeName {
             Self::Nord => "nord",
             Self::Everforest => "everforest",
             Self::Kanagawa => "kanagawa",
+            Self::RosePine => "rose-pine",
+            Self::Dracula => "dracula",
         }
     }
 }
@@ -163,6 +167,28 @@ impl OmarchyHyprlandThemeSyncEngine {
                 active_workspace: String::from("#ffa066"),
             },
         );
+        self.theme_palettes.insert(
+            OmarchyThemeName::RosePine,
+            OmarchyThemeColors {
+                name: String::from("Rosé Pine"),
+                primary_accent: String::from("#ebbcba"),
+                background: String::from("#191724"),
+                foreground: String::from("#e0def4"),
+                border_color: String::from("#c4a7e7"),
+                active_workspace: String::from("#f6c177"),
+            },
+        );
+        self.theme_palettes.insert(
+            OmarchyThemeName::Dracula,
+            OmarchyThemeColors {
+                name: String::from("Dracula"),
+                primary_accent: String::from("#ff79c6"),
+                background: String::from("#282a36"),
+                foreground: String::from("#f8f8f2"),
+                border_color: String::from("#bd93f9"),
+                active_workspace: String::from("#50fa7b"),
+            },
+        );
     }
 
     pub fn set_theme(&mut self, theme: OmarchyThemeName) -> bool {
@@ -239,6 +265,10 @@ impl OmarchyQuickshellWidgetPalette {
             .push(String::from("omarchy-bar-system-tray"));
         self.active_widgets
             .push(String::from("omarchy-bar-ai-herdr-button"));
+        self.active_widgets
+            .push(String::from("omarchy-bar-weather-applet"));
+        self.active_widgets
+            .push(String::from("omarchy-bar-battery-status"));
     }
 
     pub fn send_notification(&mut self, title: &str, body: &str) {
@@ -380,12 +410,18 @@ mod tests {
 
         let ghostty_cfg = engine.generate_ghostty_theme_config();
         assert!(ghostty_cfg.contains("background = #1a1b26"));
+
+        assert!(engine.set_theme(OmarchyThemeName::RosePine));
+        assert!(engine.generate_hyprland_theme_config().contains("Rosé Pine"));
+
+        assert!(engine.set_theme(OmarchyThemeName::Dracula));
+        assert!(engine.generate_ghostty_theme_config().contains("background = #282a36"));
     }
 
     #[test]
     fn test_omarchy_quickshell_widget_palette() {
         let mut palette = OmarchyQuickshellWidgetPalette::new();
-        assert_eq!(palette.get_active_widget_count(), 6);
+        assert_eq!(palette.get_active_widget_count(), 8);
 
         palette.send_notification("Update Available", "System updates ready");
         assert_eq!(palette.notification_history.len(), 1);
