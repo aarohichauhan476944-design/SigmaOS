@@ -58,6 +58,7 @@ pub use memory::page_compaction::*;
 pub mod network;
 pub mod observability;
 pub mod orchestration;
+pub mod pacman;
 pub mod package;
 pub use package::{
     SovereignDistroPackageAdvancementsSuiteV10, SovereignDistroPackageAdvancementsSuiteV11,
