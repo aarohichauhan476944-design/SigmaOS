@@ -5,6 +5,13 @@
 # Values such as "working" are legacy component statuses; use docs/PROJECT_STATUS.md and
 # the owning wiki page for integration, release blockers, tested configuration, and limitations.
 
+[compatibility.fedora_pr_components]
+status = "unit-tested"
+files = ["src/compatibility/sovereign_fedora_pr_components_engine.rs", "docs/studies/2026-W42-fedora-mechanisms-and-pr-architecture.md"]
+description = "Fedora Linux PR deployment engine covering Koji/Bodhi, Pagure/COPR, Podman rootless stack, SELinux MCS, Mock/DNF5, and rpm-ostree/Greenboot rollback"
+test_evidence = "Unit tests pass via rustc --test src/compatibility/sovereign_fedora_pr_components_engine.rs"
+next_milestone = "Integrate PR status telemetry into release gate dashboards"
+
 [kernel.signal_handler]
 status = "modeled"
 files = ["docs/SIGNAL_HANDLER_PLAN.md", "docs/SIGNAL_HANDLER_AUDIT_AND_ABI_PROFILE.md", "src/signal/mod.rs"]
