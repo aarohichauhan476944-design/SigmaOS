@@ -29,6 +29,8 @@ pub mod sovereign_fedora_pr_components_engine;
 pub use sovereign_fedora_pr_components_engine::*;
 pub mod sovereign_mint_pr_components_engine;
 pub use sovereign_mint_pr_components_engine::*;
+pub mod sovereign_mint_github_repo_inspirations_pr;
+pub use sovereign_mint_github_repo_inspirations_pr::*;
 pub mod zorin;
 
 pub use antix::{
