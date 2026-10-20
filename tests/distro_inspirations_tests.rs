@@ -4,14 +4,15 @@ use alloc::string::ToString;
 use alloc::vec;
 
 use sigmaos::distro_inspirations::{
-    AppStreamModuleStream, BlackarchCategory, BlackarchRepository, BlackmanBuild,
+    AnonsurfMode, AppStreamModuleStream, BlackarchCategory, BlackarchRepository, BlackmanBuild,
     CaineForensicsEnforcer, ClearLinuxAutoOptimizer, ElevateMigration, FlatcarImmutableRootfs,
     ForensicsDevicePolicy, FormFactor, FreePolicyVerdict, GamescopeCompositor, InterfaceFlag,
     IsolationKind, KaliMetapackage, KaliToolGroup, MicroarchTier, NebraskaUpdateServer,
+    ParrotAnonsurf, ParrotCategory, ParrotCryptVault, ParrotMetapackage, ParrotSandbox,
     PhoshConvergence, PressureVessel, PuppySaveSession, PureosFreePolicy, RancherOsCloudConfig,
-    RaspiConfigTool, ReleaseChannel, RescuezillaBackupEngine, SaveMode, SigRepository,
-    SteamABImageUpdate, TinyCoreExtensionManager, TorStreamIsolation, UpdateStrategy, WhonixSplit,
-    WoofCeLayer, ZincatiUpdateAgent,
+    RaspiConfigTool, ReleaseChannel, RescuezillaBackupEngine, SaveMode, SandboxLevel,
+    SigRepository, SteamABImageUpdate, TinyCoreExtensionManager, TorStreamIsolation,
+    UpdateStrategy, WhonixSplit, WoofCeLayer, ZincatiUpdateAgent,
 };
 
 #[test]
@@ -231,4 +232,53 @@ fn rescuezilla_and_clear_linux_auto_optimization_work() {
     let optimizer = ClearLinuxAutoOptimizer::detect_hardware(true, true);
     assert_eq!(optimizer.microarch_tier, MicroarchTier::X86_64V4);
     assert_eq!(optimizer.active_binary_suffix(), ".v4-avx512");
+}
+
+#[test]
+fn parrot_anonsurf_and_metapackage_work() {
+    let mut anonsurf = ParrotAnonsurf::new();
+    assert_eq!(anonsurf.mode, AnonsurfMode::Tor);
+    assert!(!anonsurf.active);
+    assert!(!anonsurf.verify_traffic_allowed());
+
+    assert!(anonsurf.start().is_ok());
+    assert!(anonsurf.active);
+    assert!(anonsurf.verify_traffic_allowed());
+    assert_eq!(anonsurf.current_exit_node.as_deref(), Some("185.220.101.5"));
+
+    let new_node = anonsurf.change_identity().unwrap();
+    assert_eq!(new_node, "185.220.102.10");
+    assert_eq!(anonsurf.current_exit_node.as_deref(), Some("185.220.102.10"));
+
+    let wiped = anonsurf.stop().unwrap();
+    assert!(wiped);
+    assert!(!anonsurf.active);
+
+    let mut meta = ParrotMetapackage::new(ParrotCategory::CoreSecurity);
+    meta.add_tool("nmap");
+    meta.add_tool("wireshark");
+    assert_eq!(meta.tool_count(), 2);
+    assert!(meta.contains_tool("nmap"));
+    assert_eq!(ParrotCategory::CoreSecurity.package_name(), "parrot-security");
+    assert_eq!(ParrotCategory::Pwn.package_name(), "parrot-tools-pwn");
+}
+
+#[test]
+fn parrot_sandbox_and_crypt_vault_work() {
+    let sandbox = ParrotSandbox::new(SandboxLevel::StrictNoNetwork);
+    assert!(!sandbox.is_syscall_allowed("socket"));
+    assert!(!sandbox.is_syscall_allowed("connect"));
+    assert!(sandbox.is_syscall_allowed("read"));
+    assert!(sandbox.is_path_isolated("/home/user/documents"));
+
+    let mut vault = ParrotCryptVault::new();
+    assert!(vault.create_vault("forensic_artifacts", "/mnt/vault", 0xDEADBEEF).is_ok());
+    assert!(vault.create_vault("forensic_artifacts", "/mnt/vault", 0xDEADBEEF).is_err());
+
+    assert!(vault.mount_vault("forensic_artifacts", 0xBAD1010).is_err());
+    assert!(vault.mount_vault("forensic_artifacts", 0xDEADBEEF).is_ok());
+    assert!(vault.is_mounted("forensic_artifacts"));
+
+    assert!(vault.unmount_vault("forensic_artifacts").is_ok());
+    assert!(!vault.is_mounted("forensic_artifacts"));
 }

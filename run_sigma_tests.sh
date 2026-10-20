@@ -124,6 +124,13 @@ if [ -f "src/distro/linux_bsd_inspirations.rs" ]; then
     ./build/distro_inspirations_test
 fi
 
+if [ -f "src/distro_inspirations.rs" ]; then
+    echo "Running Distributed Distro Inspiration Subsystem test suite..."
+    mkdir -p build
+    rustc --test src/distro_inspirations.rs --edition=2021 -o build/test_distro_inspirations
+    ./build/test_distro_inspirations
+fi
+
 if [ -f "src/distro/sovereign_netbsd_parity_engine.rs" ]; then
     echo "Running Sovereign NetBSD Parity Engine test suite..."
     mkdir -p build
