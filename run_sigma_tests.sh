@@ -966,6 +966,13 @@ if [ -f "src/distro/omarchy_linux_gap_closure_pr_suite.rs" ]; then
     ./build/test_omarchy_gap_closure
 fi
 
+if [ -f "src/distro/omarchy_linux_github_repo_improvements_pr.rs" ]; then
+    echo "Running Omarchy Linux GitHub Repo Improvements PR test suite..."
+    mkdir -p build
+    rustc --test src/distro/omarchy_linux_github_repo_improvements_pr.rs --edition=2021 --cfg 'feature="standalone_test"' -o build/test_omarchy_repo_improvements
+    ./build/test_omarchy_repo_improvements
+fi
+
 if [ -f "src/distro/sovereign_open_source_os_gap_closure_v27.rs" ]; then
     echo "Running Open Source OS Gap Closure V27 test suite..."
     mkdir -p build
