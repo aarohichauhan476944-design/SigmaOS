@@ -145,6 +145,8 @@ pub use fedora_innovations::*;
 pub mod garuda_nomad_innovations;
 pub mod gentoo;
 pub mod gentoo_inspirations;
+pub mod gentoo_github_repo_inspirations_pr;
+pub use gentoo_github_repo_inspirations_pr::*;
 pub mod improvements;
 pub mod linux_bsd_distro_gaps;
 pub mod linux_bsd_distro_gaps_synthesis;
