@@ -119,6 +119,8 @@ pub mod compliance;
 pub mod debian_github_repo_inspirations_pr;
 pub use debian_github_repo_inspirations_pr::*;
 pub mod debian_parity;
+pub mod fedora_github_repo_inspirations_pr;
+pub use fedora_github_repo_inspirations_pr::*;
 pub mod developer;
 pub mod enterprise;
 pub mod i18n;
