@@ -1178,6 +1178,13 @@ if [ -f "src/distro/open_source_os_unimplemented_ideas_pr_gateway.rs" ]; then
     ./build/test_os_ideas_gateway
 fi
 
+if [ -f "src/arch_kernel_inspirations.rs" ]; then
+    echo "Running Arch Linux & Kernel Inspirations Subsystem test suite..."
+    mkdir -p build
+    rustc --test src/arch_kernel_inspirations.rs --edition=2021 -o build/arch_kernel_inspirations_test
+    ./build/arch_kernel_inspirations_test
+fi
+
 if [ -f "src/distro/arch_linux_github_repo_components_pr_engine.rs" ]; then
     echo "Running Arch Linux GitHub Repo Components PR Engine test suite..."
     mkdir -p build
