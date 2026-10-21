@@ -67,6 +67,7 @@ pub use omarchy::{
 };
 pub mod antix_zorin_innovations;
 pub mod kali_security;
+pub use kali_security::*;
 pub mod mint_innovations;
 pub mod mint_omarchy_hybrid_synthesis;
 pub mod parrot_security;
