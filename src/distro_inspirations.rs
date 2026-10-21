@@ -21,6 +21,11 @@
 //   - Kali Linux tool metapackages         -> `KaliMetapackage`
 //   - Raspberry Pi OS raspi-config         -> `RaspiConfigTool`
 //   - Puppy Linux SAVE-file / SFS layers   -> `PuppySaveSession` / `WoofCeLayer`
+//   - Tiny Core Linux .tcz extension manager -> `TinyCoreExtensionManager`
+//   - CAINE forensics read-only enforcer    -> `CaineForensicsEnforcer`
+//   - Rescuezilla backup engine             -> `RescuezillaBackupEngine`
+//   - Clear Linux auto optimizer            -> `ClearLinuxAutoOptimizer`
+//   - Cachy Linux / CachyOS performance     -> `CachyOsKernelBoreScheduler` / `CachyOsChwdHardwareDetector` / `CachyOsSettingsTuner` / `CachyOsRateMirrorsRanker` / `CachyOsHandheldGamingManager` / `CachyOsSnapperManager` / `CachyOsUksmDeduplicator` / `CachyOsProtonGamingRuntime`
 
 use std::collections::BTreeMap;
 use std::format;
@@ -1085,5 +1090,259 @@ impl ClearLinuxAutoOptimizer {
             MicroarchTier::X86_64V3 => ".v3-avx2",
             MicroarchTier::X86_64V4 => ".v4-avx512",
         }
+    }
+}
+
+// =========================================================================
+// 17. CACHY LINUX / CACHYOS -> High-Performance Gaming & Hardware Optimization
+// =========================================================================
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CachyOsSchedType {
+    Bore,
+    ScxLavd,
+    ScxRusty,
+}
+
+pub struct CachyOsKernelBoreScheduler {
+    pub sched_type: CachyOsSchedType,
+    pub burst_score_weight: u32,
+    pub latency_slice_ns: u64,
+}
+
+impl CachyOsKernelBoreScheduler {
+    pub fn new() -> Self {
+        Self {
+            sched_type: CachyOsSchedType::Bore,
+            burst_score_weight: 128,
+            latency_slice_ns: 2_000_000,
+        }
+    }
+
+    pub fn calculate_timeslice(&self, burst_count: u32, base_ns: u64) -> u64 {
+        if burst_count < 10 {
+            self.latency_slice_ns
+        } else {
+            base_ns + (burst_count as u64 * 500_000)
+        }
+    }
+}
+
+impl Default for CachyOsKernelBoreScheduler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CachyGpuDriverType {
+    NvidiaOpenV4Dkms,
+    MesaAmdgpuV3,
+    IntelIrisV3,
+    GenericModesetting,
+}
+
+pub struct CachyOsChwdHardwareDetector {
+    pub detected_driver: CachyGpuDriverType,
+    pub isa_v3_v4_capable: bool,
+}
+
+impl CachyOsChwdHardwareDetector {
+    pub fn detect(has_avx2: bool, is_nvidia: bool) -> Self {
+        let driver = if is_nvidia {
+            CachyGpuDriverType::NvidiaOpenV4Dkms
+        } else if has_avx2 {
+            CachyGpuDriverType::MesaAmdgpuV3
+        } else {
+            CachyGpuDriverType::GenericModesetting
+        };
+        Self {
+            detected_driver: driver,
+            isa_v3_v4_capable: has_avx2,
+        }
+    }
+}
+
+pub struct CachyOsSettingsTuner {
+    pub swappiness: u32,
+    pub zram_compression: String,
+    pub thp_policy: String,
+    pub split_lock_mitigate: bool,
+}
+
+impl CachyOsSettingsTuner {
+    pub fn new() -> Self {
+        Self {
+            swappiness: 180,
+            zram_compression: "zstd".to_string(),
+            thp_policy: "madvise".to_string(),
+            split_lock_mitigate: false,
+        }
+    }
+
+    pub fn apply_gaming_preset(&mut self) {
+        self.thp_policy = "always".to_string();
+        self.swappiness = 180;
+        self.split_lock_mitigate = false;
+    }
+}
+
+impl Default for CachyOsSettingsTuner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub struct CachyOsRateMirrorsRanker {
+    pub mirrors: Vec<(String, u32)>,
+}
+
+impl CachyOsRateMirrorsRanker {
+    pub fn new() -> Self {
+        Self {
+            mirrors: vec![
+                ("https://repo.cachyos.org/v4".to_string(), 10),
+                ("https://mirror.cachyos.org/v3".to_string(), 15),
+            ],
+        }
+    }
+
+    pub fn fastest_mirror(&self) -> Option<&str> {
+        self.mirrors
+            .iter()
+            .min_by_key(|(_, latency)| *latency)
+            .map(|(url, _)| url.as_str())
+    }
+}
+
+impl Default for CachyOsRateMirrorsRanker {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub struct CachyOsHandheldGamingManager {
+    pub tdp_limit_watts: u8,
+    pub gamescope_vrr: bool,
+}
+
+impl CachyOsHandheldGamingManager {
+    pub fn new() -> Self {
+        Self {
+            tdp_limit_watts: 15,
+            gamescope_vrr: true,
+        }
+    }
+
+    pub fn set_tdp(&mut self, watts: u8) {
+        self.tdp_limit_watts = watts;
+    }
+}
+
+impl Default for CachyOsHandheldGamingManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub struct CachyOsSnapperManager {
+    pub total_snapshots: usize,
+}
+
+impl CachyOsSnapperManager {
+    pub fn new() -> Self {
+        Self { total_snapshots: 0 }
+    }
+
+    pub fn create_snapshot(&mut self) -> usize {
+        self.total_snapshots += 1;
+        self.total_snapshots
+    }
+}
+
+impl Default for CachyOsSnapperManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub struct CachyOsUksmDeduplicator {
+    pub active: bool,
+    pub pages_deduped: u64,
+}
+
+impl CachyOsUksmDeduplicator {
+    pub fn new() -> Self {
+        Self {
+            active: true,
+            pages_deduped: 1024,
+        }
+    }
+
+    pub fn run_pass(&mut self) -> u64 {
+        if self.active {
+            self.pages_deduped += 256;
+        }
+        self.pages_deduped
+    }
+}
+
+impl Default for CachyOsUksmDeduplicator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub struct CachyOsProtonGamingRuntime {
+    pub proton_version: String,
+    pub ntsync_enabled: bool,
+}
+
+impl CachyOsProtonGamingRuntime {
+    pub fn new() -> Self {
+        Self {
+            proton_version: "Proton-9.0-CachyOS".to_string(),
+            ntsync_enabled: true,
+        }
+    }
+}
+
+impl Default for CachyOsProtonGamingRuntime {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod cachyos_tests {
+    use super::*;
+
+    #[test]
+    fn test_cachyos_inspiration_components() {
+        let bore = CachyOsKernelBoreScheduler::new();
+        assert_eq!(bore.calculate_timeslice(2, 10_000_000), 2_000_000);
+
+        let chwd = CachyOsChwdHardwareDetector::detect(true, true);
+        assert_eq!(chwd.detected_driver, CachyGpuDriverType::NvidiaOpenV4Dkms);
+
+        let mut tuner = CachyOsSettingsTuner::new();
+        tuner.apply_gaming_preset();
+        assert_eq!(tuner.thp_policy, "always");
+
+        let ranker = CachyOsRateMirrorsRanker::new();
+        assert_eq!(ranker.fastest_mirror(), Some("https://repo.cachyos.org/v4"));
+
+        let mut handheld = CachyOsHandheldGamingManager::new();
+        handheld.set_tdp(20);
+        assert_eq!(handheld.tdp_limit_watts, 20);
+
+        let mut snapper = CachyOsSnapperManager::new();
+        assert_eq!(snapper.create_snapshot(), 1);
+
+        let mut uksm = CachyOsUksmDeduplicator::new();
+        assert_eq!(uksm.run_pass(), 1280);
+
+        let proton = CachyOsProtonGamingRuntime::new();
+        assert!(proton.ntsync_enabled);
     }
 }
