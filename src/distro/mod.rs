@@ -118,6 +118,8 @@ pub mod compat_layers;
 pub mod compliance;
 pub mod debian_github_repo_inspirations_pr;
 pub use debian_github_repo_inspirations_pr::*;
+pub mod debian_github_repo_missing_components_v53_pr;
+pub use debian_github_repo_missing_components_v53_pr::*;
 pub mod debian_parity;
 pub mod developer;
 pub mod enterprise;
