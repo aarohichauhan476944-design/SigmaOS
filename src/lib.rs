@@ -236,7 +236,7 @@ pub use distro::{
     ArchBuildSystem, ArchMirror, ArchPacmanHooksManager, ArchRepoType, AuditResult, AuditRule,
     AurHelper, AurPackage, BackupSnapshot, BackupSystem, BoreSchedulerGovernor, BountyStatus,
     BsdSecureNtpConstraintSync, BsdStatefulPacketFilter, BugBountyProgram, BugBountyReport,
-    BuildJob, BuildStatus, BundleError, CachyKernelVariant, CachyPackageRepo, CanFrame,
+    BuildJob, BuildStatus, BundleError, CachyKernelVariant, CachyPackageRepo, CachyosGithubRepoInspirationsPrSuite, CanFrame,
     CertificationStatus, ChannelManager, CloudInitBootstrapEngine, CommunityConference,
     ComplianceAuditor, ComponentType, ConferenceTalk, ConfigHook, CpuArchitecture, CpuCapabilities,
     CrossBuildPipeline, CrossbowVnic, DaxMemoryRegion, DebianPolicyEnforcer, DebianSocialContract,
