@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.omarchy_linux_github_repo_inspirations_v53_pr]
+status = "Integrated"
+files = ["src/distro/omarchy_linux_github_repo_inspirations_v53_pr.rs"]
+description = "Omarchy Linux GitHub Repository Inspirations & PR Gateway Engine V53 delivering quickshell applets, hyprland dynamic tiling, omakase theme sync, dotfiles stow, PKGBUILD, and agentic assistant in PR proposal format."
+test_evidence = "Passing 6 unit and integration tests via ./run_sigma_tests.sh"
+next_milestone = "Hardware display server integration"
