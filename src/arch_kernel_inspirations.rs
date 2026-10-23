@@ -498,6 +498,10 @@ impl SecurityAdvisoryTracker {
     pub fn critical_count(&self) -> usize {
         self.by_severity(AdvisorySeverity::Critical).len()
     }
+
+    pub fn calculate_total_risk_score(&self) -> u32 {
+        self.advisories.iter().map(|a| a.cvss_score).sum()
+    }
 }
 
 impl Default for SecurityAdvisoryTracker {
@@ -573,6 +577,11 @@ impl SignstarService {
         }
     }
 
+    pub fn with_quorum_threshold(mut self, threshold: usize) -> Self {
+        self.quorum_threshold = threshold;
+        self
+    }
+
     pub fn set_threshold_count(&mut self, threshold: usize) {
         self.threshold_signers_count = threshold;
     }
@@ -593,6 +602,16 @@ impl SignstarService {
                 expires_at: 0,
                 is_revoked: false,
             },
+            policy,
+            signed: false,
+            signature_timestamp: 0,
+        });
+    }
+
+    pub fn add_signer_with_key(&mut self, id: &str, policy: SignerPolicy, key: SigningKey) {
+        self.signers.push(Signer {
+            id: id.to_string(),
+            key,
             policy,
             signed: false,
             signature_timestamp: 0,
@@ -990,6 +1009,19 @@ pub enum ReproducibleStatus {
     NotBuilt,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DiscrepancyKind {
+    SizeMismatch,
+    HashMismatch,
+    TimestampMismatch,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReproducibleAuditReport {
+    pub package: String,
+    pub discrepancies: Vec<DiscrepancyKind>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReproducibleBuildRecord {
     pub package: String,
@@ -1001,13 +1033,54 @@ pub struct ReproducibleBuildRecord {
 
 pub struct ReproducibleBuildVerdict {
     pub records: Vec<ReproducibleBuildRecord>,
+    pub audit_reports: Vec<ReproducibleAuditReport>,
 }
 
 impl ReproducibleBuildVerdict {
     pub fn new() -> Self {
         Self {
             records: Vec::new(),
+            audit_reports: Vec::new(),
         }
+    }
+
+    pub fn compare_build_artifacts(
+        &mut self,
+        package: &str,
+        artifact1: &[u8],
+        artifact2: &[u8],
+    ) -> ReproducibleStatus {
+        let status = if artifact1 == artifact2 {
+            ReproducibleStatus::Reproducible
+        } else {
+            ReproducibleStatus::Unreproducible
+        };
+
+        let mut discrepancies = Vec::new();
+        if artifact1.len() != artifact2.len() {
+            discrepancies.push(DiscrepancyKind::SizeMismatch);
+        } else if artifact1 != artifact2 {
+            discrepancies.push(DiscrepancyKind::HashMismatch);
+        }
+
+        self.records.push(ReproducibleBuildRecord {
+            package: package.to_string(),
+            status,
+            source_date_epoch: 1700000000,
+            toolchain_version: "rustc-1.98.0".to_string(),
+            diff_hash: if status == ReproducibleStatus::Unreproducible {
+                Some("diffoscope-sha256-mismatch".to_string())
+            } else {
+                None
+            },
+        });
+
+        self.audit_reports.push(ReproducibleAuditReport {
+            package: package.to_string(),
+            discrepancies,
+        });
+
+        status
     }
 
     pub fn record(&mut self, package: &str, status: ReproducibleStatus) {
@@ -1234,9 +1307,9 @@ mod tests {
         };
 
         let mut signstar = SignstarService::new("core/glibc").with_quorum_threshold(2);
-        signstar.add_signer("releng", SignerPolicy::Mandatory, key_master);
-        signstar.add_signer("rogue", SignerPolicy::Optional, key_revoked);
-        signstar.add_signer("security-team", SignerPolicy::Optional, key_auditor);
+        signstar.add_signer_with_key("releng", SignerPolicy::Mandatory, key_master);
+        signstar.add_signer_with_key("rogue", SignerPolicy::Optional, key_revoked);
+        signstar.add_signer_with_key("security-team", SignerPolicy::Optional, key_auditor);
 
         // Revoked key signature should be rejected
         assert!(signstar.record_signature_at("rogue", 1700000000).is_err());

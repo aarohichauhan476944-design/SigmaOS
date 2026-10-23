@@ -435,6 +435,13 @@ if [ -f "tests/test_string_parser_standalone.rs" ]; then
     ./build/string_parser_test
 fi
 
+if [ -f "src/arch_kernel_inspirations.rs" ]; then
+    echo "Running Arch Linux & Linux Kernel Inspirations test suite..."
+    mkdir -p build
+    rustc --test src/arch_kernel_inspirations.rs --edition=2021 -o build/test_arch_kernel_inspirations
+    ./build/test_arch_kernel_inspirations
+fi
+
 if [ -f "src/distro/arch.rs" ]; then
     echo "Running Arch Linux parity & tooling test suite..."
     mkdir -p build
