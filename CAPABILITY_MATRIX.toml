@@ -92,6 +92,12 @@ tested_on = ["unit-test"]
 required_for_release = true
 description = "Zero-friction dark/light developer theme palette, font fallback, and terminal padding."
 
+[feature.omarchy_github_repo_inspirations_v53_pr]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Omarchy Linux GitHub repo inspirations including quickshell bar applets, hyprland dynamic tiling, omakase multi-theme sync, dotfiles, PKGBUILD, and agentic assistant in PR format."
+
 [feature.wayland_zenith_compositor]
 status = "prototype"
 tested_on = ["qemu-virtio-gpu"]

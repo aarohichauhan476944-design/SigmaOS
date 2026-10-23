@@ -1276,4 +1276,11 @@ if [ -f "src/creative/deckcraft.rs" ]; then
     ./build/test_deckcraft
 fi
 
+if [ -f "src/distro/omarchy_linux_github_repo_inspirations_v53_pr.rs" ]; then
+    echo "Running Omarchy Linux GitHub Repository Inspirations & PR Gateway Engine (V53) test suite..."
+    mkdir -p build
+    rustc --test src/distro/omarchy_linux_github_repo_inspirations_v53_pr.rs --edition=2021 --cfg 'feature="standalone_test"' -o build/test_omarchy_v53
+    ./build/test_omarchy_v53
+fi
+
 echo "All SigmaOS test suites completed."
