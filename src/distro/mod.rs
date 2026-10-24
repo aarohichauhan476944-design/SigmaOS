@@ -49,6 +49,8 @@ pub use system_tools::{
 pub mod omarchy_future_roadmap;
 pub mod omarchy_linux_gap_closure_pr_suite;
 pub use omarchy_linux_gap_closure_pr_suite::*;
+pub mod omarchy_linux_github_repo_inspirations_pr;
+pub use omarchy_linux_github_repo_inspirations_pr::*;
 pub mod sovereign_gap_closure_master_suite;
 pub mod sovereign_open_source_distro_synthesis;
 pub mod sovereign_stack_replacements;
