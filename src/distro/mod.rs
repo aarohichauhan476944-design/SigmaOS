@@ -535,6 +535,9 @@ pub use open_source_os_unimplemented_ideas_pr_gateway::*;
 pub mod arch_linux_github_repo_components_pr_engine;
 pub use arch_linux_github_repo_components_pr_engine::*;
 
+pub mod omarchy_linux_github_repo_pr_suite;
+pub use omarchy_linux_github_repo_pr_suite::*;
+
 pub use debian_gap_closure_advancements_v26::*;
 pub mod opensuse;
 pub mod sovereign_2030_distro_supremacy_engine;
