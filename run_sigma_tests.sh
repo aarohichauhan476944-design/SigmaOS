@@ -124,6 +124,13 @@ if [ -f "src/distro/linux_bsd_inspirations.rs" ]; then
     ./build/distro_inspirations_test
 fi
 
+if [ -f "src/distro/parrot_github_repo_inspirations_pr.rs" ]; then
+    echo "Running Parrot Security OS GitHub Repo Inspirations PR Suite test suite..."
+    mkdir -p build
+    rustc --test src/distro/parrot_github_repo_inspirations_pr.rs --edition=2021 -o build/test_parrot_pr
+    ./build/test_parrot_pr
+fi
+
 if [ -f "src/distro/sovereign_netbsd_parity_engine.rs" ]; then
     echo "Running Sovereign NetBSD Parity Engine test suite..."
     mkdir -p build
