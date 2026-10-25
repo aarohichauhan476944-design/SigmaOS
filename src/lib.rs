@@ -115,6 +115,7 @@ pub use process::{
     WNOHANG, WUNTRACED,
 };
 pub mod linuxmint_inspirations;
+pub use distro::mint_github_repo_inspirations_pr::*;
 pub use linuxmint_inspirations::{
     AppTheme, BackupFileEntry, BulkyRenamer, CaptainInstaller, CaptainSource, CatalogPackage,
     ConfigBackend, DebPackage, DesktopIconFlags, DiagnosticField, DocumentBookmark,
