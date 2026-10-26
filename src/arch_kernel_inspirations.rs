@@ -498,6 +498,15 @@ impl SecurityAdvisoryTracker {
     pub fn critical_count(&self) -> usize {
         self.by_severity(AdvisorySeverity::Critical).len()
     }
+
+    /// Calculate total risk score across all vulnerable advisories
+    pub fn calculate_total_risk_score(&self) -> u32 {
+        self.advisories
+            .iter()
+            .filter(|a| a.status == AdvisoryStatus::Vulnerable)
+            .map(|a| a.cvss_score)
+            .sum()
+    }
 }
 
 impl Default for SecurityAdvisoryTracker {
@@ -582,10 +591,27 @@ impl SignstarService {
         self.all_mandatory_signed() && total_signed >= self.threshold_signers_count
     }
 
-    pub fn add_signer(&mut self, id: &str, policy: SignerPolicy) {
+    pub fn with_quorum_threshold(mut self, threshold: usize) -> Self {
+        self.quorum_threshold = threshold;
+        self.threshold_signers_count = threshold;
+        self
+    }
+
+    pub fn add_signer_with_key(&mut self, id: &str, policy: SignerPolicy, key: SigningKey) {
         self.signers.push(Signer {
             id: id.to_string(),
-            key: SigningKey {
+            key,
+            policy,
+            signed: false,
+            signature_timestamp: 0,
+        });
+    }
+
+    pub fn add_signer(&mut self, id: &str, policy: SignerPolicy) {
+        self.add_signer_with_key(
+            id,
+            policy,
+            SigningKey {
                 key_id: id.to_string(),
                 fingerprint: format!("fp_{}", id),
                 algorithm: SignatureAlgorithm::Ed25519,
@@ -593,10 +619,7 @@ impl SignstarService {
                 expires_at: 0,
                 is_revoked: false,
             },
-            policy,
-            signed: false,
-            signature_timestamp: 0,
-        });
+        );
     }
 
     /// Record that a signer has produced a valid signature at a specific timestamp.
@@ -990,6 +1013,18 @@ pub enum ReproducibleStatus {
     NotBuilt,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DiscrepancyKind {
+    SizeMismatch,
+    ByteDifference,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AuditReport {
+    pub package: String,
+    pub discrepancies: Vec<DiscrepancyKind>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReproducibleBuildRecord {
     pub package: String,
@@ -1001,13 +1036,45 @@ pub struct ReproducibleBuildRecord {
 
 pub struct ReproducibleBuildVerdict {
     pub records: Vec<ReproducibleBuildRecord>,
+    pub audit_reports: Vec<AuditReport>,
 }
 
 impl ReproducibleBuildVerdict {
     pub fn new() -> Self {
         Self {
             records: Vec::new(),
+            audit_reports: Vec::new(),
         }
+    }
+
+    /// Compare two build artifacts byte-for-byte and produce status + diagnostic audit report.
+    pub fn compare_build_artifacts(
+        &mut self,
+        package: &str,
+        bin_a: &[u8],
+        bin_b: &[u8],
+    ) -> ReproducibleStatus {
+        let mut discrepancies = Vec::new();
+
+        if bin_a.len() != bin_b.len() {
+            discrepancies.push(DiscrepancyKind::SizeMismatch);
+        } else if bin_a != bin_b {
+            discrepancies.push(DiscrepancyKind::ByteDifference);
+        }
+
+        let status = if discrepancies.is_empty() {
+            ReproducibleStatus::Reproducible
+        } else {
+            ReproducibleStatus::Unreproducible
+        };
+
+        self.record(package, status);
+        self.audit_reports.push(AuditReport {
+            package: package.to_string(),
+            discrepancies,
+        });
+
+        status
     }
 
     pub fn record(&mut self, package: &str, status: ReproducibleStatus) {
@@ -1234,9 +1301,9 @@ mod tests {
         };
 
         let mut signstar = SignstarService::new("core/glibc").with_quorum_threshold(2);
-        signstar.add_signer("releng", SignerPolicy::Mandatory, key_master);
-        signstar.add_signer("rogue", SignerPolicy::Optional, key_revoked);
-        signstar.add_signer("security-team", SignerPolicy::Optional, key_auditor);
+        signstar.add_signer_with_key("releng", SignerPolicy::Mandatory, key_master);
+        signstar.add_signer_with_key("rogue", SignerPolicy::Optional, key_revoked);
+        signstar.add_signer_with_key("security-team", SignerPolicy::Optional, key_auditor);
 
         // Revoked key signature should be rejected
         assert!(signstar.record_signature_at("rogue", 1700000000).is_err());
