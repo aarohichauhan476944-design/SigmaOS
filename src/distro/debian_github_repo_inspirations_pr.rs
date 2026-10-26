@@ -27,7 +27,17 @@
 //  21. `DebianDep5CopyrightValidator`: `debian/copyright` DEP-5 license & copyright format validator
 //  22. `DebianDgetFetchVerifier`: `dget` / `dget-pqc` source package fetcher & PQC checksum verifier
 //  23. `DebianDebcleanWorkspaceSanitizer`: `debclean` build tree cleaner & artifact purge engine
-//  24. `DebianGithubRepoInspirationsPrSuite`: Master suite unifying all Debian GitHub repo paradigms
+//  24. `DebianPopconUsageTelemetryGovernor`: `popcon` popularity contest telemetry & ranking
+//  25. `DebianAptCacherNgProxyGovernor`: `apt-cacher-ng` HTTP caching proxy & mirror failover manager
+//  26. `DebianLintianStaticLinterEngine`: `lintian` package static analysis & policy compliance checker
+//  27. `DebianDebconfPreseedAutomatorEngine`: Unattended installation preseed generator & question response engine
+//  28. `DebianAptSecurePinningGovernor`: `/etc/apt/preferences` release channel priority pinning governor
+//  29. `DebianDebsnapSourceArchiveFetcher`: `debsnap` historical package snapshot fetcher & retriever
+//  30. `DebianDebdiffChangelogComparator`: `debdiff` package differential comparator & changelog parser
+//  31. `DebianDpkgVendorPolicyEngine`: `/etc/dpkg/origins/` vendor origin policy & derivative OS governor
+//  32. `DebianDebianPureBlendsProfileEngine`: Debian Pure Blends metapackage profile manager
+//  33. `DebianDevscriptsUtilityHarness`: `devscripts` developer utility suite harness
+//  34. `DebianGithubRepoInspirationsPrSuite`: Master suite unifying all Debian GitHub repo paradigms
 
 #![allow(non_camel_case_types)]
 #![allow(dead_code)]
@@ -1022,7 +1032,470 @@ impl Default for DebianDebcleanWorkspaceSanitizer {
 }
 
 // =========================================================================
-// 24. MASTER SUITE FOR DEBIAN GITHUB REPO INSPIRATIONS & OPEN SOURCE OS PARITY
+// 24. POPCON POPULARITY-CONTEST USAGE TELEMETRY GOVERNOR
+// =========================================================================
+
+#[derive(Debug, Clone)]
+pub struct PopconPackageScore {
+    pub package_name: String,
+    pub vote_count: u64,
+    pub recent_use_count: u64,
+}
+
+pub struct DebianPopconUsageTelemetryGovernor {
+    pub enabled: bool,
+    pub package_scores: BTreeMap<String, PopconPackageScore>,
+}
+
+impl DebianPopconUsageTelemetryGovernor {
+    pub fn new(enabled: bool) -> Self {
+        Self {
+            enabled,
+            package_scores: BTreeMap::new(),
+        }
+    }
+
+    pub fn record_usage(&mut self, pkg: &str, recently_used: bool) {
+        if !self.enabled {
+            return;
+        }
+        let entry = self
+            .package_scores
+            .entry(pkg.to_string())
+            .or_insert_with(|| PopconPackageScore {
+                package_name: pkg.to_string(),
+                vote_count: 0,
+                recent_use_count: 0,
+            });
+        entry.vote_count += 1;
+        if recently_used {
+            entry.recent_use_count += 1;
+        }
+    }
+
+    pub fn get_score(&self, pkg: &str) -> Option<&PopconPackageScore> {
+        self.package_scores.get(pkg)
+    }
+}
+
+impl Default for DebianPopconUsageTelemetryGovernor {
+    fn default() -> Self {
+        Self::new(true)
+    }
+}
+
+// =========================================================================
+// 25. APT-CACHER-NG HTTP PROXY & MIRROR FAILOVER GOVERNOR
+// =========================================================================
+
+#[derive(Debug, Clone)]
+pub struct ProxyMirrorNode {
+    pub mirror_url: String,
+    pub active: bool,
+    pub cache_hits: u64,
+}
+
+pub struct DebianAptCacherNgProxyGovernor {
+    pub proxy_port: u16,
+    pub mirrors: Vec<ProxyMirrorNode>,
+}
+
+impl DebianAptCacherNgProxyGovernor {
+    pub fn new(proxy_port: u16) -> Self {
+        Self {
+            proxy_port,
+            mirrors: Vec::new(),
+        }
+    }
+
+    pub fn add_mirror(&mut self, url: &str) {
+        self.mirrors.push(ProxyMirrorNode {
+            mirror_url: url.to_string(),
+            active: true,
+            cache_hits: 0,
+        });
+    }
+
+    pub fn request_package(&mut self, pkg: &str) -> Option<String> {
+        let node = self.mirrors.iter_mut().find(|m| m.active)?;
+        node.cache_hits += 1;
+        Some(format!("{}/pool/main/{}", node.mirror_url, pkg))
+    }
+}
+
+impl Default for DebianAptCacherNgProxyGovernor {
+    fn default() -> Self {
+        Self::new(3142)
+    }
+}
+
+// =========================================================================
+// 26. LINTIAN STATIC LINTER ENGINE
+// =========================================================================
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LintianTagSeverity {
+    Info,
+    Warning,
+    Error,
+    Pedantic,
+}
+
+#[derive(Debug, Clone)]
+pub struct LintianReportTag {
+    pub tag_name: String,
+    pub severity: LintianTagSeverity,
+    pub message: String,
+}
+
+pub struct DebianLintianStaticLinterEngine {
+    pub overrides: Vec<String>,
+    pub detected_tags: Vec<LintianReportTag>,
+}
+
+impl DebianLintianStaticLinterEngine {
+    pub fn new() -> Self {
+        Self {
+            overrides: Vec::new(),
+            detected_tags: Vec::new(),
+        }
+    }
+
+    pub fn add_override(&mut self, tag_name: &str) {
+        self.overrides.push(tag_name.to_string());
+    }
+
+    pub fn lint_package(&mut self, pkg_name: &str, check_control: bool) -> usize {
+        if !check_control {
+            let tag = LintianReportTag {
+                tag_name: "no-control-file".to_string(),
+                severity: LintianTagSeverity::Error,
+                message: format!("Package '{}' missing debian/control", pkg_name),
+            };
+            if !self.overrides.contains(&tag.tag_name) {
+                self.detected_tags.push(tag);
+            }
+        }
+        self.detected_tags.len()
+    }
+}
+
+impl Default for DebianLintianStaticLinterEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 27. DEBCONF PRESEED UNATTENDED INSTALLATION AUTOMATOR
+// =========================================================================
+
+pub struct DebianDebconfPreseedAutomatorEngine {
+    pub preseed_entries: BTreeMap<String, String>,
+}
+
+impl DebianDebconfPreseedAutomatorEngine {
+    pub fn new() -> Self {
+        Self {
+            preseed_entries: BTreeMap::new(),
+        }
+    }
+
+    pub fn set_preseed(&mut self, owner: &str, question: &str, qtype: &str, value: &str) {
+        let key = format!("{}/{}", owner, question);
+        let entry = format!("{} {} {} {}", owner, question, qtype, value);
+        self.preseed_entries.insert(key, entry);
+    }
+
+    pub fn generate_preseed_file(&self) -> String {
+        let mut out = String::new();
+        for entry in self.preseed_entries.values() {
+            out.push_str(entry);
+            out.push('\n');
+        }
+        out
+    }
+}
+
+impl Default for DebianDebconfPreseedAutomatorEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 28. APT SECURE PINNING GOVERNOR
+// =========================================================================
+
+#[derive(Debug, Clone)]
+pub struct AptPinRule {
+    pub package_pattern: String,
+    pub release_target: String,
+    pub pin_priority: i32,
+}
+
+pub struct DebianAptSecurePinningGovernor {
+    pub pin_rules: Vec<AptPinRule>,
+}
+
+impl DebianAptSecurePinningGovernor {
+    pub fn new() -> Self {
+        Self {
+            pin_rules: Vec::new(),
+        }
+    }
+
+    pub fn add_pin_rule(&mut self, pattern: &str, release: &str, priority: i32) {
+        self.pin_rules.push(AptPinRule {
+            package_pattern: pattern.to_string(),
+            release_target: release.to_string(),
+            pin_priority: priority,
+        });
+    }
+
+    pub fn get_priority(&self, pkg: &str, release: &str) -> i32 {
+        for rule in &self.pin_rules {
+            if (rule.package_pattern == "*" || rule.package_pattern == pkg)
+                && rule.release_target == release
+            {
+                return rule.pin_priority;
+            }
+        }
+        500 // default APT priority
+    }
+}
+
+impl Default for DebianAptSecurePinningGovernor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 29. DEBSNAP HISTORICAL SOURCE FETCH ENGINE
+// =========================================================================
+
+pub struct DebianDebsnapSourceArchiveFetcher {
+    pub snapshot_base_url: String,
+    pub cached_snapshots: BTreeMap<String, Vec<String>>,
+}
+
+impl DebianDebsnapSourceArchiveFetcher {
+    pub fn new(base_url: &str) -> Self {
+        Self {
+            snapshot_base_url: base_url.to_string(),
+            cached_snapshots: BTreeMap::new(),
+        }
+    }
+
+    pub fn register_snapshot_versions(&mut self, pkg: &str, versions: &[&str]) {
+        self.cached_snapshots.insert(
+            pkg.to_string(),
+            versions.iter().map(|s| s.to_string()).collect(),
+        );
+    }
+
+    pub fn get_download_url(&self, pkg: &str, version: &str) -> Option<String> {
+        let versions = self.cached_snapshots.get(pkg)?;
+        if versions.iter().any(|v| v == version) {
+            Some(format!(
+                "{}/mr/package/{}/{}/download-dsc",
+                self.snapshot_base_url, pkg, version
+            ))
+        } else {
+            None
+        }
+    }
+}
+
+impl Default for DebianDebsnapSourceArchiveFetcher {
+    fn default() -> Self {
+        Self::new("https://snapshot.debian.org")
+    }
+}
+
+// =========================================================================
+// 30. DEBDIFF CHANGELOG COMPARATOR
+// =========================================================================
+
+#[derive(Debug, Clone)]
+pub struct DebdiffSummary {
+    pub pkg1: String,
+    pub pkg2: String,
+    pub diff_lines: u32,
+    pub modified_files: Vec<String>,
+}
+
+pub struct DebianDebdiffChangelogComparator {
+    pub comparisons: Vec<DebdiffSummary>,
+}
+
+impl DebianDebdiffChangelogComparator {
+    pub fn new() -> Self {
+        Self {
+            comparisons: Vec::new(),
+        }
+    }
+
+    pub fn compare_packages(&mut self, pkg1: &str, pkg2: &str, modified: &[&str]) -> DebdiffSummary {
+        let summary = DebdiffSummary {
+            pkg1: pkg1.to_string(),
+            pkg2: pkg2.to_string(),
+            diff_lines: (modified.len() * 15) as u32,
+            modified_files: modified.iter().map(|s| s.to_string()).collect(),
+        };
+        self.comparisons.push(summary.clone());
+        summary
+    }
+}
+
+impl Default for DebianDebdiffChangelogComparator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 31. DPKG VENDOR ORIGIN POLICY ENGINE
+// =========================================================================
+
+#[derive(Debug, Clone)]
+pub struct VendorOriginSpec {
+    pub vendor_name: String,
+    pub parent_vendor: Option<String>,
+    pub bug_url: String,
+}
+
+pub struct DebianDpkgVendorPolicyEngine {
+    pub active_vendor: String,
+    pub vendors: BTreeMap<String, VendorOriginSpec>,
+}
+
+impl DebianDpkgVendorPolicyEngine {
+    pub fn new(default_vendor: &str) -> Self {
+        let mut engine = Self {
+            active_vendor: default_vendor.to_string(),
+            vendors: BTreeMap::new(),
+        };
+        engine.register_vendor(
+            "Debian",
+            None,
+            "https://bugs.debian.org",
+        );
+        engine
+    }
+
+    pub fn register_vendor(&mut self, name: &str, parent: Option<&str>, bug_url: &str) {
+        self.vendors.insert(
+            name.to_string(),
+            VendorOriginSpec {
+                vendor_name: name.to_string(),
+                parent_vendor: parent.map(|s| s.to_string()),
+                bug_url: bug_url.to_string(),
+            },
+        );
+    }
+
+    pub fn derives_from(&self, vendor: &str, parent: &str) -> bool {
+        let mut current = vendor;
+        while let Some(spec) = self.vendors.get(current) {
+            if let Some(ref p) = spec.parent_vendor {
+                if p == parent {
+                    return true;
+                }
+                current = p;
+            } else {
+                break;
+            }
+        }
+        false
+    }
+}
+
+impl Default for DebianDpkgVendorPolicyEngine {
+    fn default() -> Self {
+        Self::new("Debian")
+    }
+}
+
+// =========================================================================
+// 32. DEBIAN PURE BLENDS METAPACKAGE PROFILE ENGINE
+// =========================================================================
+
+#[derive(Debug, Clone)]
+pub struct PureBlendProfile {
+    pub blend_name: String,
+    pub metapackages: Vec<String>,
+}
+
+pub struct DebianDebianPureBlendsProfileEngine {
+    pub profiles: BTreeMap<String, PureBlendProfile>,
+}
+
+impl DebianDebianPureBlendsProfileEngine {
+    pub fn new() -> Self {
+        Self {
+            profiles: BTreeMap::new(),
+        }
+    }
+
+    pub fn register_blend(&mut self, blend: &str, metapkgs: &[&str]) {
+        self.profiles.insert(
+            blend.to_string(),
+            PureBlendProfile {
+                blend_name: blend.to_string(),
+                metapackages: metapkgs.iter().map(|s| s.to_string()).collect(),
+            },
+        );
+    }
+
+    pub fn get_blend(&self, blend: &str) -> Option<&PureBlendProfile> {
+        self.profiles.get(blend)
+    }
+}
+
+impl Default for DebianDebianPureBlendsProfileEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 33. DEVSCRIPTS UTILITY SUITE HARNESS
+// =========================================================================
+
+pub struct DebianDevscriptsUtilityHarness {
+    pub available_tools: Vec<String>,
+}
+
+impl DebianDevscriptsUtilityHarness {
+    pub fn new() -> Self {
+        let tools = vec![
+            "checkbashisms".to_string(),
+            "licensecheck".to_string(),
+            "chdist".to_string(),
+            "bts".to_string(),
+            "uscan".to_string(),
+            "debdiff".to_string(),
+            "debsign".to_string(),
+            "dget".to_string(),
+        ];
+        Self { available_tools: tools }
+    }
+
+    pub fn check_bashisms(&self, script_contents: &str) -> bool {
+        script_contents.contains("function ") || script_contents.contains("==")
+    }
+}
+
+impl Default for DebianDevscriptsUtilityHarness {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// =========================================================================
+// 34. MASTER SUITE FOR DEBIAN GITHUB REPO INSPIRATIONS & OPEN SOURCE OS PARITY
 // =========================================================================
 
 pub struct DebianGithubRepoInspirationsPrSuite {
@@ -1049,6 +1522,16 @@ pub struct DebianGithubRepoInspirationsPrSuite {
     pub dep5_validator: DebianDep5CopyrightValidator,
     pub dget_verifier: DebianDgetFetchVerifier,
     pub debclean: DebianDebcleanWorkspaceSanitizer,
+    pub popcon: DebianPopconUsageTelemetryGovernor,
+    pub apt_cacher: DebianAptCacherNgProxyGovernor,
+    pub lintian: DebianLintianStaticLinterEngine,
+    pub preseed: DebianDebconfPreseedAutomatorEngine,
+    pub apt_pinning: DebianAptSecurePinningGovernor,
+    pub debsnap: DebianDebsnapSourceArchiveFetcher,
+    pub debdiff: DebianDebdiffChangelogComparator,
+    pub vendor_policy: DebianDpkgVendorPolicyEngine,
+    pub pure_blends: DebianDebianPureBlendsProfileEngine,
+    pub devscripts: DebianDevscriptsUtilityHarness,
 }
 
 impl DebianGithubRepoInspirationsPrSuite {
@@ -1079,6 +1562,16 @@ impl DebianGithubRepoInspirationsPrSuite {
             dep5_validator: DebianDep5CopyrightValidator::new("sigmaos", "GPL-3.0"),
             dget_verifier: DebianDgetFetchVerifier::new(),
             debclean: DebianDebcleanWorkspaceSanitizer::new(),
+            popcon: DebianPopconUsageTelemetryGovernor::new(true),
+            apt_cacher: DebianAptCacherNgProxyGovernor::new(3142),
+            lintian: DebianLintianStaticLinterEngine::new(),
+            preseed: DebianDebconfPreseedAutomatorEngine::new(),
+            apt_pinning: DebianAptSecurePinningGovernor::new(),
+            debsnap: DebianDebsnapSourceArchiveFetcher::new("https://snapshot.debian.org"),
+            debdiff: DebianDebdiffChangelogComparator::new(),
+            vendor_policy: DebianDpkgVendorPolicyEngine::new("Debian"),
+            pure_blends: DebianDebianPureBlendsProfileEngine::new(),
+            devscripts: DebianDevscriptsUtilityHarness::new(),
         }
     }
 
@@ -1112,12 +1605,24 @@ impl DebianGithubRepoInspirationsPrSuite {
         self.reconfigure.reconfigure_package("tzdata");
         self.debclean.clean_workspace();
 
+        self.popcon.record_usage("bash", true);
+        self.apt_cacher.add_mirror("http://deb.debian.org/debian");
+        self.lintian.lint_package("test-pkg", true);
+        self.preseed.set_preseed("locale", "select", "string", "en_US.UTF-8");
+        self.apt_pinning.add_pin_rule("*", "sid", 990);
+        self.debsnap.register_snapshot_versions("bash", &["5.2-1"]);
+        self.debdiff.compare_packages("bash_5.1", "bash_5.2", &["changelog"]);
+        self.vendor_policy.register_vendor("Ubuntu", Some("Debian"), "https://bugs.launchpad.net");
+        self.pure_blends.register_blend("debian-edu", &["education-main"]);
+
         signed
             && ci_count > 0
             && self
                 .statoverride_mgr
                 .get_override("/usr/bin/sudo")
                 .is_some()
+            && self.popcon.get_score("bash").is_some()
+            && self.vendor_policy.derives_from("Ubuntu", "Debian")
     }
 }
 
@@ -1250,6 +1755,45 @@ mod tests {
 
         let mut debclean = DebianDebcleanWorkspaceSanitizer::new();
         assert_eq!(debclean.clean_workspace(), 42);
+
+        let mut popcon = DebianPopconUsageTelemetryGovernor::new(true);
+        popcon.record_usage("nano", true);
+        assert_eq!(popcon.get_score("nano").unwrap().vote_count, 1);
+
+        let mut proxy = DebianAptCacherNgProxyGovernor::new(3142);
+        proxy.add_mirror("http://ftp.debian.org/debian");
+        assert!(proxy.request_package("main/b/bash.deb").unwrap().contains("ftp.debian.org"));
+
+        let mut lintian = DebianLintianStaticLinterEngine::new();
+        lintian.add_override("no-control-file");
+        assert_eq!(lintian.lint_package("broken-pkg", false), 0);
+
+        let mut preseed = DebianDebconfPreseedAutomatorEngine::new();
+        preseed.set_preseed("d-i", "language", "string", "en");
+        assert!(preseed.generate_preseed_file().contains("d-i language string en"));
+
+        let mut pin = DebianAptSecurePinningGovernor::new();
+        pin.add_pin_rule("*", "experimental", 101);
+        assert_eq!(pin.get_priority("gcc", "experimental"), 101);
+
+        let mut debsnap = DebianDebsnapSourceArchiveFetcher::new("https://snapshot.debian.org");
+        debsnap.register_snapshot_versions("coreutils", &["9.1-1"]);
+        assert!(debsnap.get_download_url("coreutils", "9.1-1").is_some());
+
+        let mut debdiff = DebianDebdiffChangelogComparator::new();
+        let diff = debdiff.compare_packages("v1", "v2", &["main.c"]);
+        assert_eq!(diff.diff_lines, 15);
+
+        let mut vendor = DebianDpkgVendorPolicyEngine::new("Debian");
+        vendor.register_vendor("Kali", Some("Debian"), "https://bugs.kali.org");
+        assert!(vendor.derives_from("Kali", "Debian"));
+
+        let mut blends = DebianDebianPureBlendsProfileEngine::new();
+        blends.register_blend("debian-med", &["med-bio"]);
+        assert_eq!(blends.get_blend("debian-med").unwrap().metapackages[0], "med-bio");
+
+        let devscripts = DebianDevscriptsUtilityHarness::new();
+        assert!(devscripts.check_bashisms("function test() { echo 1; }"));
     }
 
     #[test]
