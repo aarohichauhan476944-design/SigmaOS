@@ -959,6 +959,13 @@ if [ -f "src/distro/sovereign_linux_bsd_ecosystem_gap_closure_v50_pr.rs" ]; then
     ./build/test_gap_closure_v50_pr
 fi
 
+if [ -f "src/distro/omarchy_inspiration.rs" ]; then
+    echo "Running Sovereign Omarchy 4 Desktop Inspiration Engine test suite..."
+    mkdir -p build
+    rustc --test src/distro/omarchy_inspiration.rs --edition=2021 -o build/test_omarchy_inspiration
+    ./build/test_omarchy_inspiration
+fi
+
 if [ -f "src/distro/omarchy_linux_gap_closure_pr_suite.rs" ]; then
     echo "Running Omarchy Linux Gap Closure & PR Gateway test suite..."
     mkdir -p build
