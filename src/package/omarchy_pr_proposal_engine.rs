@@ -83,15 +83,35 @@ impl OmarchyPrProposalEngine {
         pr_id
     }
 
+    pub fn lint_proposal(&self, pr_id: u64) -> Result<bool, &'static str> {
+        let prop = self
+            .proposals
+            .get(&pr_id)
+            .ok_or("Omarchy PR Error: Proposal not found")?;
+        if prop.title.is_empty() || prop.author.is_empty() || prop.target_component.is_empty() {
+            return Ok(false);
+        }
+        if !prop.unified_diff.contains("---") || !prop.unified_diff.contains("+++") {
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    pub fn get_proposal_status(&self, pr_id: u64) -> Option<OmarchyPrStatus> {
+        self.proposals.get(&pr_id).map(|p| p.status)
+    }
+
     pub fn validate_and_merge_pr(&mut self, pr_id: u64) -> Result<OmarchyPrStatus, &'static str> {
+        if !self.lint_proposal(pr_id)? {
+            if let Some(prop) = self.proposals.get_mut(&pr_id) {
+                prop.status = OmarchyPrStatus::Rejected;
+            }
+            return Err("Omarchy PR Error: Linting failed for proposal");
+        }
         let prop = self
             .proposals
             .get_mut(&pr_id)
             .ok_or("Omarchy PR Error: Proposal not found")?;
-        if prop.unified_diff.is_empty() {
-            prop.status = OmarchyPrStatus::Rejected;
-            return Err("Omarchy PR Error: Empty diff in proposal");
-        }
         prop.status = OmarchyPrStatus::Validated;
         prop.status = OmarchyPrStatus::PRDiffGenerated;
         prop.status = OmarchyPrStatus::Merged;
@@ -399,9 +419,17 @@ mod tests {
             "--- a/style.css\n+++ b/style.css",
         );
         assert_eq!(pr_id, 1001);
+        assert_eq!(engine.get_proposal_status(pr_id), Some(OmarchyPrStatus::Submitted));
+        assert_eq!(engine.lint_proposal(pr_id), Ok(true));
 
         let status = engine.validate_and_merge_pr(pr_id).unwrap();
         assert_eq!(status, OmarchyPrStatus::Merged);
+        assert_eq!(engine.get_proposal_status(pr_id), Some(OmarchyPrStatus::Merged));
+
+        let bad_pr = engine.submit_proposal("Bad PR", "dev", "waybar", "invalid diff");
+        assert_eq!(engine.lint_proposal(bad_pr), Ok(false));
+        assert!(engine.validate_and_merge_pr(bad_pr).is_err());
+        assert_eq!(engine.get_proposal_status(bad_pr), Some(OmarchyPrStatus::Rejected));
     }
 
     #[test]

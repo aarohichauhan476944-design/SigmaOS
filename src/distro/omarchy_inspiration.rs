@@ -107,6 +107,20 @@ impl OmarchyQuickshellEngine {
         Ok(self.widgets.len())
     }
 
+    pub fn toggle_widget(&mut self, id: &str, enabled: bool) -> Result<bool, &'static str> {
+        if let Some(widget) = self.widgets.get_mut(id) {
+            widget.is_enabled = enabled;
+            Ok(widget.is_enabled)
+        } else {
+            Err("Widget not found")
+        }
+    }
+
+    pub fn load_layout(&mut self, layout_name: &str) {
+        self.active_layout_name = layout_name.to_string();
+        self.config_json = format!("{{\"layout\": \"{}\", \"version\": \"4.0\"}}", layout_name);
+    }
+
     pub fn render_shell_summary(&self) -> String {
         format!(
             "Omarchy Quickshell [{}] managing {} unified components",
@@ -775,6 +789,13 @@ mod omarchy_tests {
         assert!(shell
             .render_shell_summary()
             .contains("5 unified components"));
+
+        assert_eq!(shell.toggle_widget("bar_clock", false), Ok(false));
+        assert!(shell.toggle_widget("invalid_widget", true).is_err());
+
+        shell.load_layout("minimal_layout");
+        assert_eq!(shell.active_layout_name, "minimal_layout");
+        assert!(shell.config_json.contains("minimal_layout"));
     }
 
     #[test]
