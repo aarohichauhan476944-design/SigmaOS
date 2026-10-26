@@ -1029,6 +1029,13 @@ if [ -f "src/distro/open_source_os_missing_components_v46_pr.rs" ]; then
     ./build/test_open_source_v46_pr
 fi
 
+if [ -f "src/distro/cachy_github_repo_inspirations_pr.rs" ]; then
+    echo "Running Cachy Linux GitHub Repo Inspirations PR Suite..."
+    mkdir -p build
+    rustc --test src/distro/cachy_github_repo_inspirations_pr.rs --edition=2021 -o build/test_cachy_github_pr
+    ./build/test_cachy_github_pr
+fi
+
 if [ -f "src/distro/cachy_linux_missing_components_engine.rs" ]; then
     echo "Running Cachy Linux Missing Components Engine test suite..."
     mkdir -p build
