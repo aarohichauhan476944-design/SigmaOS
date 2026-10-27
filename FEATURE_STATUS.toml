@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.omarchy_github_repo_inspirations_pr]
+status = "unit-tested"
+files = ["src/distro/omarchy_github_repo_inspirations_pr.rs"]
+description = "Omarchy Linux GitHub Repository Inspirations & PR Gateway Engine delivering Hyprland window rules, quickshell applets, wallust theme syncing, stow dotfiles, herdr AI workload router, and fail-closed security capability guard in PR proposal format."
+test_evidence = "Unit tests pass via rustc --test src/distro/omarchy_github_repo_inspirations_pr.rs"
+next_milestone = "Wayland Zenith compositor and Quickshell graphical runtime integration"
