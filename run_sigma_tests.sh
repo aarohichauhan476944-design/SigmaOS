@@ -1276,4 +1276,11 @@ if [ -f "src/creative/deckcraft.rs" ]; then
     ./build/test_deckcraft
 fi
 
+if [ -f "src/distro/omarchy_github_repo_inspirations_pr.rs" ]; then
+    echo "Running omArchy Linux GitHub Repo Inspirations PR Suite..."
+    mkdir -p build
+    rustc --test src/distro/omarchy_github_repo_inspirations_pr.rs --edition=2021 -o build/test_omarchy_github_pr
+    ./build/test_omarchy_github_pr
+fi
+
 echo "All SigmaOS test suites completed."
