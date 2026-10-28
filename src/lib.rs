@@ -230,6 +230,7 @@ pub use dashboard::{
     DashboardWidget, MetricData, MetricType, SystemMonitor, UnifiedDashboard, WidgetType,
 };
 pub use distro::arch_missing_components_parity_pr::*;
+pub use distro::debian_github_repo_missing_components_v53_pr::*;
 pub use distro::openbsd_missing_components_parity_pr::*;
 pub use distro::{
     AdminAction, AiSysAdmin, AppBundleRuntime, AppManifest, AppsAuditTool, AptCacheSimulator,
