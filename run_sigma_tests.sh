@@ -966,6 +966,13 @@ if [ -f "src/distro/omarchy_linux_gap_closure_pr_suite.rs" ]; then
     ./build/test_omarchy_gap_closure
 fi
 
+if [ -f "src/distro/omarchy_linux_inspiration_pr_engine.rs" ]; then
+    echo "Running Omarchy Linux Inspiration PR Engine test suite..."
+    mkdir -p build
+    rustc --test src/distro/omarchy_linux_inspiration_pr_engine.rs --edition=2021 -o build/test_omarchy_inspiration_pr
+    ./build/test_omarchy_inspiration_pr
+fi
+
 if [ -f "src/distro/sovereign_open_source_os_gap_closure_v27.rs" ]; then
     echo "Running Open Source OS Gap Closure V27 test suite..."
     mkdir -p build
