@@ -74,6 +74,9 @@ pub use mint_omarchy_hybrid_synthesis::*;
 pub mod mint_expanded_tools;
 pub use mint_expanded_tools::*;
 
+pub mod mint_github_repo_inspirations_pr;
+pub use mint_github_repo_inspirations_pr::*;
+
 pub use omarchy::*;
 
 pub mod omarchy_app_ecosystem;
