@@ -490,6 +490,8 @@ pub mod arch_linux_pinnacle_gap_closure;
 pub mod bsd_linux_innovations;
 pub mod bsd_parity;
 pub mod cachy;
+pub mod cachy_github_repo_inspirations_pr;
+pub use cachy_github_repo_inspirations_pr::*;
 pub mod cachy_linux_missing_components_engine;
 pub mod cachy_linux_missing_components_parity_pr;
 pub mod cachy_linux_missing_components_pr_gateway;
