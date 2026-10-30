@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.arch_mkinitcpio_chroot]
+status = "unit-tested"
+files = ["src/distro/arch_mkinitcpio_chroot_gateway.rs", "docs/studies/2026-W42-arch-mkinitcpio-and-chroot-pr-gateway.md"]
+description = "Arch Linux inspired mkinitcpio early-boot initramfs hooks manager and arch-chroot virtual mounts provisioner with PR gateway"
+test_evidence = "Unit tests pass via rustc --test src/distro/arch_mkinitcpio_chroot_gateway.rs"
+next_milestone = "Integration with initramfs boot image builder and VFS chroot entrypoint"
