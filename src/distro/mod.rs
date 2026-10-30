@@ -500,6 +500,8 @@ pub mod debian_linux_gap_closure_v40_pr;
 pub mod distro_inspiration_engine;
 pub mod distro_inspiration_synthesis;
 pub mod fedora_gap_closure;
+pub mod fedora_github_repo_inspirations_pr;
+pub use fedora_github_repo_inspirations_pr::*;
 pub mod fedora_new_hotness;
 pub mod fedora_pagure_exporter;
 pub mod illumos_smf_engine;
