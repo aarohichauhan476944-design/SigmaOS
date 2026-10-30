@@ -611,6 +611,12 @@ pub use sovereign_open_source_os_apex_inspirations_v50::{FlakeInput as ApexFlake
 pub mod arch_linux_missing_components_v51_pr;
 pub use arch_linux_missing_components_v51_pr::*;
 
+pub mod omarchy_linux_missing_components_v52_pr;
+pub use omarchy_linux_missing_components_v52_pr::*;
+
+pub mod omarchy_github_repo_innovations_v53_pr;
+pub use omarchy_github_repo_innovations_v53_pr::*;
+
 // Re-export stub types
 pub use crate::stubs::distro_stubs::*;
 pub use crate::stubs::large_distro_stubs::*;
