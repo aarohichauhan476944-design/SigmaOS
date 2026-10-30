@@ -1276,4 +1276,18 @@ if [ -f "src/creative/deckcraft.rs" ]; then
     ./build/test_deckcraft
 fi
 
+if [ -f "src/distro/omarchy_linux_missing_components_v52_pr.rs" ]; then
+    echo "Running Omarchy Linux Missing Components V52 PR test suite..."
+    mkdir -p build
+    rustc --test src/distro/omarchy_linux_missing_components_v52_pr.rs --edition=2021 -o build/test_omarchy_v52_pr
+    ./build/test_omarchy_v52_pr
+fi
+
+if [ -f "src/distro/omarchy_github_repo_innovations_v53_pr.rs" ]; then
+    echo "Running Omarchy Linux GitHub Repo Innovations V53 PR test suite..."
+    mkdir -p build
+    rustc --test src/distro/omarchy_github_repo_innovations_v53_pr.rs --edition=2021 -o build/test_omarchy_v53_pr
+    ./build/test_omarchy_v53_pr
+fi
+
 echo "All SigmaOS test suites completed."

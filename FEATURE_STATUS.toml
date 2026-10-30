@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.omarchy_github_repo_innovations_v53_pr]
+status = "integrated"
+files = ["src/distro/omarchy_github_repo_innovations_v53_pr.rs", "src/distro/omarchy_linux_missing_components_v52_pr.rs"]
+description = "Clean-room, no_std compatible Omarchy Linux GitHub repository inspirations engine featuring Hyprland window rules, Quickshell applets, Sigomarchy CLI, Wallust live theme, Herdr AI scheduler, Fail-closed sudo, Web2App PWA launcher, Zellij multiplexer, Omakase developer presets, and Ananicy GameMode performance governor in PR proposal format"
+test_evidence = "Unit tests pass via rustc --test src/distro/omarchy_github_repo_innovations_v53_pr.rs and ./run_sigma_tests.sh"
+next_milestone = "Hardware-tested QEMU Wayland framebuffer validation"
