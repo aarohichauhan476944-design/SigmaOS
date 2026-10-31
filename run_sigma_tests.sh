@@ -1276,4 +1276,11 @@ if [ -f "src/creative/deckcraft.rs" ]; then
     ./build/test_deckcraft
 fi
 
+if [ -f "src/distro/qubes_github_repo_inspirations_pr.rs" ]; then
+    echo "Running Qubes Linux GitHub Repo Inspirations PR Engine test suite..."
+    mkdir -p build
+    rustc --test src/distro/qubes_github_repo_inspirations_pr.rs --edition=2021 -o build/test_qubes_pr
+    ./build/test_qubes_pr
+fi
+
 echo "All SigmaOS test suites completed."
