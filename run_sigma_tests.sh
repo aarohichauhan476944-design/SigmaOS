@@ -1184,6 +1184,13 @@ if [ -f "src/distro/arch_linux_github_repo_components_pr_engine.rs" ]; then
     rustc --test src/distro/arch_linux_github_repo_components_pr_engine.rs --edition=2021 -o build/test_arch_github_repo_components
     ./build/test_arch_github_repo_components
 fi
+
+if [ -f "src/distro/arch_linux_github_repo_inspirations_pr.rs" ]; then
+    echo "Running Arch Linux GitHub Repo Inspirations PR Suite test suite..."
+    mkdir -p build
+    rustc --test src/distro/arch_linux_github_repo_inspirations_pr.rs --edition=2021 -o build/test_arch_inspirations
+    ./build/test_arch_inspirations
+fi
 if [ -f "src/distro/sovereign_open_source_os_fedora_github_pr_suite.rs" ]; then
     echo "Running Sovereign Open Source OS Fedora GitHub PR Suite test suite..."
     mkdir -p build
