@@ -92,6 +92,12 @@ tested_on = ["unit-test"]
 required_for_release = true
 description = "Zero-friction dark/light developer theme palette, font fallback, and terminal padding."
 
+[feature.omarchy_github_repo_inspirations_pr]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "omArchy Linux GitHub repo inspirations PR proposal suite integrating Hyprland WM dwindle rules, Wallust live theming, Quickshell applets, Stow dotfiles, sigomarchy CLI, Herdr AI scheduling, fail-closed sudo, Web2App PWAs, Thunar/Zellij, Ananicy GameMode, and Hyprsunset night light."
+
 [feature.wayland_zenith_compositor]
 status = "prototype"
 tested_on = ["qemu-virtio-gpu"]
