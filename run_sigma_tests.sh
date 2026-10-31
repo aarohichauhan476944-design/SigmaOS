@@ -1269,6 +1269,13 @@ if [ -f "src/distro/sovereign_open_source_os_apex_inspirations_v50.rs" ]; then
     ./build/test_apex_v50
 fi
 
+if [ -f "src/distro/fedora_github_repo_inspirations_pr.rs" ]; then
+    echo "Running Fedora Linux GitHub Repo Inspirations PR Suite test suite..."
+    mkdir -p build
+    rustc --test src/distro/fedora_github_repo_inspirations_pr.rs --edition=2021 -o build/test_fedora_github_repo_inspirations_pr
+    ./build/test_fedora_github_repo_inspirations_pr
+fi
+
 if [ -f "src/creative/deckcraft.rs" ]; then
     echo "Running DeckCraft Presentation Framework & PR Engine test suite..."
     mkdir -p build
