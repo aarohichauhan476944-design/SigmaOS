@@ -159,3 +159,13 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+# -----------------------------------------------------------------------------
+# 6. CachyOS GitHub Repository Inspirations & Gaming Parity
+# -----------------------------------------------------------------------------
+
+[feature.cachyos_github_repo_inspirations_pr]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Cachy Linux ecosystem inspirations PR engine including BORE/sched_ext governor, CHWD detection, x86-64 v1..v4 repos, handheld gaming, snapper sync, and UKSM deduplication."

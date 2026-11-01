@@ -1043,6 +1043,13 @@ if [ -f "src/distro/cachy_linux_missing_components_pr_gateway.rs" ]; then
     ./build/test_cachy_linux_missing_components_pr_gateway
 fi
 
+if [ -f "src/distro/cachy_github_repo_inspirations_pr.rs" ]; then
+    echo "Running Cachy Linux GitHub Repo Inspirations PR Suite..."
+    mkdir -p build
+    rustc --test src/distro/cachy_github_repo_inspirations_pr.rs --edition=2021 -o build/test_cachy_github_repo_inspirations_pr
+    ./build/test_cachy_github_repo_inspirations_pr
+fi
+
 if [ -f "src/distro/open_source_os_unimplemented_ideas_pr_gateway.rs" ]; then
     echo "Running Open Source OS Unimplemented Ideas PR Gateway test suite..."
     mkdir -p build
