@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.elementary_os_pantheon_inspirations]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = false
+description = "Elementary OS GitHub inspirations suite: Pantheon session lifecycle, Gala compositor window manager, Wingpanel indicators, Plank dock launcher, Granite HIG toolkit, Switchboard modular control center, Contractor dynamic services, AppCenter PWYW store, and native desktop apps in PR proposal format."

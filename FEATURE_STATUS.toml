@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.elementary_github_repo_inspirations_pr]
+status = "implemented"
+files = ["src/distro/elementary_github_repo_inspirations_pr.rs"]
+description = "Elementary OS GitHub repository inspirations PR suite covering Pantheon session, Gala compositor, Wingpanel, Plank, Granite HIG, Switchboard, Contractor, AppCenter PWYW, Sideload, and core application engines"
+test_evidence = "Unit tests pass via rustc --test src/distro/elementary_github_repo_inspirations_pr.rs and run_sigma_tests.sh"
+next_milestone = "Native Wayland protocol binding and Qubes/DispVM contract isolation"

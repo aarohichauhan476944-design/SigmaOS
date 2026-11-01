@@ -39,6 +39,7 @@ pub use storage::*;
 pub mod system;
 pub use system::*;
 pub use distro::sovereign_linux_bsd_wiki_master_engine::*;
+pub use distro::elementary_github_repo_inspirations_pr::*;
 pub mod driver;
 pub mod drivers;
 pub use drivers::sovereign_comprehensive_drivers::*;
