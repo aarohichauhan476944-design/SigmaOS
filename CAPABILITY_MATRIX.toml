@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.debian_github_repo_missing_components_v53_pr]
+status = "complete"
+tested_on = ["unit-test"]
+required_for_release = false
+description = "Debian Linux GitHub Repo Missing Components V53 PR Suite providing multi-vendor origins policy, apt-cacher-ng proxy, lintian linter, popcon telemetry, debconf preseed, udpkg micro installer, post-quantum apt keyring, and secure pinning"

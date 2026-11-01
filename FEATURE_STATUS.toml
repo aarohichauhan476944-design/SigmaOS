@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.debian_github_repo_missing_components_v53_pr]
+status = "unit-tested"
+files = ["src/distro/debian_github_repo_missing_components_v53_pr.rs"]
+description = "Debian Linux GitHub Repo Missing Components V53 PR Suite providing 14 Debian ecosystem PR proposal engines including dpkg vendor policy, apt-cacher-ng proxy, lintian linter, popcon telemetry, debconf preseed, udpkg micro installer, post-quantum apt keyring, and secure pinning"
+test_evidence = "Unit tests pass via rustc --test src/distro/debian_github_repo_missing_components_v53_pr.rs and run_sigma_tests.sh"
+next_milestone = "Integration with live dpkg database and rootfs installer pipeline"
