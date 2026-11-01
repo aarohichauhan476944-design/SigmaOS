@@ -579,6 +579,8 @@ pub mod sovereign_omarchy_github_repo_parity;
 pub mod sovereign_omarchy_repository_innovations;
 pub mod sovereign_omarchy_theme_unlock_synthesis;
 pub mod sovereign_open_source_inspirations_engine;
+pub mod fedora_github_repo_inspirations_pr;
+pub use fedora_github_repo_inspirations_pr::*;
 pub mod sovereign_open_source_os_fedora_github_pr_suite;
 pub mod sovereign_open_source_os_gap_closure_v27;
 pub mod sovereign_open_source_os_gap_closure_v31_pr;
