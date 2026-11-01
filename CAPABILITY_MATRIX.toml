@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.gentoo_github_repo_inspirations_pr]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Gentoo Linux GitHub repository inspirations and PR proposal engines covering Portage EAPI 8, eselect, etc-update, layman, OpenRC, catalyst, hardened PaX, pkgcheck, distcc, gentoolkit, genkernel, and crossdev."
