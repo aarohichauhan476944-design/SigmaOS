@@ -1269,6 +1269,13 @@ if [ -f "src/distro/sovereign_open_source_os_apex_inspirations_v50.rs" ]; then
     ./build/test_apex_v50
 fi
 
+if [ -f "src/distro/debian_github_repo_missing_components_v53_pr.rs" ]; then
+    echo "Running Debian Linux GitHub Repo Missing Components V53 PR test suite..."
+    mkdir -p build
+    rustc --test src/distro/debian_github_repo_missing_components_v53_pr.rs --edition=2021 -o build/test_debian_missing_components_v53_pr
+    ./build/test_debian_missing_components_v53_pr
+fi
+
 if [ -f "src/creative/deckcraft.rs" ]; then
     echo "Running DeckCraft Presentation Framework & PR Engine test suite..."
     mkdir -p build
