@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.arch_linux_github_repo_inspirations_pr]
+status = "Unit-tested"
+files = ["src/distro/arch_linux_github_repo_inspirations_pr.rs"]
+description = "Arch Linux GitHub repository inspirations and PR proposal engines covering archinstall, archiso, reflector, powerpill, pacman keyring PQC, testing signoff, devtools clean chroot, dbscripts, aurweb RPC, arch-security-tracker, modprobed-db, pacman-contrib, downgrade ALA, mkinitcpio, install-scripts genfstab, and namcap."
+test_evidence = "17 unit tests passing via rustc --test src/distro/arch_linux_github_repo_inspirations_pr.rs"
+next_milestone = "Hardware-tested runtime integration"
