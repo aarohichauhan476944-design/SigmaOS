@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.omarchy_github_inspirations]
+status = "unit-tested"
+files = ["src/distro/sovereign_omarchy_github_inspirations_pr.rs", "docs/research/ADR-0053-omarchy-linux-github-inspirations.md"]
+description = "Omarchy Linux GitHub Repository Inspirations PR proposal suite covering Hyprland dwindle layout, Quickshell applets, GPU terminal studio, Omakase developer presets, Herdr multi-agent AI, Wallust theme sync, Stow dotfile backups, and Ananicy gamemode"
+test_evidence = "Architectural ADR published in docs/research/ADR-0053-omarchy-linux-github-inspirations.md; 7 unit tests pass via rustc --test src/distro/sovereign_omarchy_github_inspirations_pr.rs"
+next_milestone = "Integrate Quickshell QML applets with Wayland compositor event stream"
