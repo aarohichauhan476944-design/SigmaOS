@@ -546,6 +546,8 @@ pub mod sovereign_2065_distro_supremacy_engine;
 pub mod sovereign_architecture_development_decision_plan;
 pub mod sovereign_distro_absorption_master_engine;
 pub mod sovereign_distro_innovations_synthesis;
+pub mod gentoo_github_repo_inspirations_pr;
+pub use gentoo_github_repo_inspirations_pr::*;
 pub mod sovereign_gentoo_gap_closure_pr_engine;
 pub mod sovereign_github_wiki_complete_deployment;
 pub mod sovereign_linux_bsd_distro_master_suite;
