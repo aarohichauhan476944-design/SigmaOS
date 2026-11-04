@@ -108,6 +108,12 @@ tested_on = ["unit-test"]
 required_for_release = true
 description = "5-tier update classification policy preventing risky package upgrades on production systems."
 
+[feature.mint_github_repo_inspirations_pr_suite]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Linux Mint GitHub repository inspirations and PR proposal engines covering 22 core tools including mintupdate, mintinstall, mintstick, warpinator, hypnotix, bulky, thingy, mintnanny, mintwelcome, mintreport, mintlocale, mintdesktop, mintbackup, mintdrivers, mintsources, mintupgrade, sticky, xapps, slick-greeter, nemo, muffin, and cinnamon-spices."
+
 [feature.timeshift_atomic_rollback]
 status = "implemented"
 tested_on = ["unit-test"]
