@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.mint_github_repo_inspirations_pr]
+status = "implemented"
+files = ["src/distro/mint_github_repo_inspirations_pr.rs"]
+description = "SigmaOS Linux Mint GitHub Repo Inspirations and PR Proposal Suite covering 22 core tools (mintupdate, mintinstall, mintstick, warpinator, hypnotix, bulky, thingy, mintnanny, mintwelcome, mintreport, mintlocale, mintdesktop, mintbackup, mintdrivers, mintsources, mintupgrade, sticky, xapps, slick-greeter, nemo, muffin, and cinnamon-spices)"
+test_evidence = "Clean-room unit tests pass via rustc --test src/distro/mint_github_repo_inspirations_pr.rs"
+next_milestone = "Integrate Mint PR engine with dynamic package installation and Cinnamon applet runtime"
