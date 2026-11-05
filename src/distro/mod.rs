@@ -584,6 +584,9 @@ pub mod sovereign_open_source_os_gap_closure_v27;
 pub mod sovereign_open_source_os_gap_closure_v31_pr;
 pub mod sovereign_open_source_os_gap_closure_v36_pr;
 pub mod sovereign_open_source_os_pinnacle_pr_v35;
+pub mod parrot_github_repo_inspirations_pr;
+pub use parrot_github_repo_inspirations_pr::*;
+
 pub mod whonix_privacy_synthesis;
 pub mod wiki_unimplemented_ideas;
 
