@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.cachy_github_repo_inspirations_pr]
+status = "full"
+tested_on = ["unit-test"]
+required_for_release = false
+description = "Cachy Linux GitHub repository inspirations PR suite encompassing BORE/sched_ext scheduling, CHWD GPU auto-installer, x86-64-v1..v4 vector repos, rate-mirrors, and UKSM deduplicator."

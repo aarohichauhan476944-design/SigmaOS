@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.cachy_github_repo_inspirations_pr]
+status = "unit-tested"
+files = ["src/distro/cachy_github_repo_inspirations_pr.rs"]
+description = "Cachy Linux GitHub repository inspirations PR suite including BORE/sched_ext CPU scheduler governor, CHWD hardware detection, x86-64-v1..v4 repo manager, rate-mirrors ranker, AutoFDO/LTO kernel manager, handheld TDP & Gamescope VRR governor, Snapper Btrfs Limine bootloader sync, UKSM deduplicator, sysctl tuner, Calamares subvolumes, and PR proposal matrix."
+test_evidence = "Unit tests pass via rustc --test src/distro/cachy_github_repo_inspirations_pr.rs"
+next_milestone = "Direct integration with kernel scheduler and runtime memory compaction"
