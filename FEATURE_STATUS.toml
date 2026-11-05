@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.kali_github_repo_inspirations_pr]
+status = "complete"
+files = ["src/distro/kali_github_repo_inspirations_pr.rs"]
+description = "Kali Linux GitHub repo inspirations PR proposal suite and security subsystems"
+test_evidence = "Unit tests pass via rustc --test src/distro/kali_github_repo_inspirations_pr.rs"
+next_milestone = "Integration with live deployment and eBPF syscall telemetry"
