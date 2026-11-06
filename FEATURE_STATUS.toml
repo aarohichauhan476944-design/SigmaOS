@@ -173,6 +173,13 @@ description = "Ed25519-style key verification with expiry, revocation, Mint upda
 test_evidence = "Unit tests pass"
 next_milestone = "Real Ed25519 crypto integration"
 
+[distro.mint_github_repo_inspirations_pr]
+status = "working"
+files = ["src/distro/mint_github_repo_inspirations_pr.rs"]
+description = "Linux Mint GitHub repository inspirations and PR suite implementing 22+ upstream tools, Dilithium-5 PQC signing, and automated PR proposal matrix"
+test_evidence = "Unit tests in src/distro/mint_github_repo_inspirations_pr.rs and run_sigma_tests.sh pass"
+next_milestone = "Hardware-tested userland integration with Zenith Desktop"
+
 [package.manager]
 status = "working"
 files = ["src/package/manager.rs", "src/package/repository.rs", "src/package/universal.rs"]
