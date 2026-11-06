@@ -1276,4 +1276,11 @@ if [ -f "src/creative/deckcraft.rs" ]; then
     ./build/test_deckcraft
 fi
 
+if [ -f "src/distro/elementary_github_repo_inspirations_pr.rs" ]; then
+    echo "Running Elementary Linux GitHub Repo Inspirations & PR Suite..."
+    mkdir -p build
+    rustc --test src/distro/elementary_github_repo_inspirations_pr.rs --edition=2021 -o build/test_elementary_github
+    ./build/test_elementary_github
+fi
+
 echo "All SigmaOS test suites completed."
