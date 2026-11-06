@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.kali_github_repo_inspirations_pr]
+status = "complete"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Kali Linux GitHub repo inspirations PR proposal suite: Undercover theme switcher, NetHunter mobile chroot, Win-KeX bridge, security metapackages, Purple SOC, ARM profiles, LUKS emergency nuke, Anonsurf onion routing, and archive keyring PQC verification."
