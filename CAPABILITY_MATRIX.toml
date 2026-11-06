@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.elementary_github_repo_inspirations_pr]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Elementary OS GitHub repository inspirations & PR suite implementing Gala compositor, Wingpanel indicators, Plank dock, Granite HIG, Contractor sharing, AppCenter PWYW, Switchboard plugs, and security guards."
