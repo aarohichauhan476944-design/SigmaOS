@@ -32,6 +32,7 @@ pub mod device;
 pub mod diagnostics;
 pub use diagnostics::*;
 pub mod distro;
+pub use distro::arch_linux_github_repo_inspirations_pr::*;
 pub mod input;
 pub mod ipc;
 pub mod storage;
