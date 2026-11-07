@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.parrot_github_repo_inspirations_pr]
+status = "implemented"
+files = ["src/distro/parrot_github_repo_inspirations_pr.rs"]
+description = "Parrot Linux GitHub Repo Inspirations PR Suite with Anonsurf, Airmode, Menu taxonomy, Rolling updater, Mirrordirector, Cobuild, Torrent builder, Live-build, Post-quantum keyring, AppArmor seccomp, Forensics write-blocker, HTB VPN, and Metadata scrubber"
+test_evidence = "Unit tests pass via rustc --test src/distro/parrot_github_repo_inspirations_pr.rs"
+next_milestone = "Continuous multi-arch package building and dynamic PQC live-patching"

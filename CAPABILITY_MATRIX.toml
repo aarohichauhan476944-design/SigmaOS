@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.parrot_github_repo_inspirations_pr]
+status = "complete"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Parrot Linux GitHub Repo Inspirations and PR Proposal Suite featuring Anonsurf Tor/I2P routing, Airmode wireless engine, parrot-menu taxonomy, parrot-updater rolling scheduler, mirrordirector ranker, cobuild distributed pipeline, torrent generator, live-build ISO config, post-quantum keyring rotation, AppArmor seccomp sandbox, forensics write-blocker, HTB VPN router, and metadata scrubber."
