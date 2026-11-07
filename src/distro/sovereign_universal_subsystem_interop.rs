@@ -546,11 +546,7 @@ impl SovereignUniversalSubsystemInteropEngine {
                 UniversalSubsystemCategory::TimeSynchronization,
                 true,
                 true,
-                &[
-                    "chrony_ntp",
-                    "ptp_hardware_clock",
-                    "bsd_secure_time",
-                ],
+                &["chrony_ntp", "ptp_hardware_clock", "bsd_secure_time"],
                 5,
             ),
         );
@@ -576,11 +572,7 @@ impl SovereignUniversalSubsystemInteropEngine {
                 UniversalSubsystemCategory::DeviceHotplug,
                 true,
                 true,
-                &[
-                    "udev_devd_bridge",
-                    "xhci_hotplug",
-                    "evdev_multitouch",
-                ],
+                &["udev_devd_bridge", "xhci_hotplug", "evdev_multitouch"],
                 9,
             ),
         );
@@ -591,12 +583,7 @@ impl SovereignUniversalSubsystemInteropEngine {
                 UniversalSubsystemCategory::CryptographySecurity,
                 true,
                 true,
-                &[
-                    "pqc_dilithium",
-                    "falcon_1024",
-                    "kyber_1024",
-                    "luks2_geli",
-                ],
+                &["pqc_dilithium", "falcon_1024", "kyber_1024", "luks2_geli"],
                 12,
             ),
         );
@@ -1275,7 +1262,9 @@ mod tests {
         assert!(engine.subsystem_adapters.contains_key("device_hotplug"));
         assert!(engine.subsystem_adapters.contains_key("crypto_security"));
         assert!(engine.subsystem_adapters.contains_key("telemetry_obs"));
-        assert!(engine.subsystem_adapters.contains_key("accessibility_input"));
+        assert!(engine
+            .subsystem_adapters
+            .contains_key("accessibility_input"));
 
         let event_id = engine
             .dispatch_cross_subsystem_operation_all_distros("shell", "ipc_mem", "alloc_ring_buffer")

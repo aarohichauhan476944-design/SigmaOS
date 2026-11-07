@@ -172,7 +172,11 @@ impl OpenBsdBioctlSoftraidPrEngine {
         }
     }
 
-    pub fn create_softraid_crypto(&mut self, volume_id: &str, chunk_dev: &str) -> Result<String, String> {
+    pub fn create_softraid_crypto(
+        &mut self,
+        volume_id: &str,
+        chunk_dev: &str,
+    ) -> Result<String, String> {
         self.softraid_volumes
             .insert(volume_id.to_string(), chunk_dev.to_string());
         Ok(format!(
@@ -201,9 +205,21 @@ impl OpenBsdDaemonSuitePrEngine {
     pub fn get_daemon_status(&self) -> String {
         format!(
             "OpenBSD Daemons Status - smtpd: {}, doas: {}, slaacd: {}",
-            if self.smtpd_running { "active" } else { "inactive" },
-            if self.doas_configured { "configured" } else { "unconfigured" },
-            if self.slaacd_running { "active" } else { "inactive" }
+            if self.smtpd_running {
+                "active"
+            } else {
+                "inactive"
+            },
+            if self.doas_configured {
+                "configured"
+            } else {
+                "unconfigured"
+            },
+            if self.slaacd_running {
+                "active"
+            } else {
+                "inactive"
+            }
         )
     }
 }
@@ -230,12 +246,26 @@ impl OpenBsdMissingComponentsParityPrSuite {
     }
 
     pub fn execute_openbsd_parity_eval(&mut self) -> bool {
-        let _pf = self.pfsync_carp.sync_pf_state("state-1", "pass in proto tcp").is_ok();
-        let _pl = self.pledge_unveil.apply_pledge("stdio rpath wpath cpath").is_ok();
+        let _pf = self
+            .pfsync_carp
+            .sync_pf_state("state-1", "pass in proto tcp")
+            .is_ok();
+        let _pl = self
+            .pledge_unveil
+            .apply_pledge("stdio rpath wpath cpath")
+            .is_ok();
         let _un = self.pledge_unveil.apply_unveil("/etc/openbsd", "r").is_ok();
-        let _kp = self.karl_pinsyscall.pin_syscall_range(0x7FFF0000, 0x7FFF1000).is_ok();
-        let _sig = self.signify.verify_signature("openbsd-76-base", b"release_data");
-        let _bio = self.bioctl.create_softraid_crypto("sd0a", "/dev/sd1a").is_ok();
+        let _kp = self
+            .karl_pinsyscall
+            .pin_syscall_range(0x7FFF0000, 0x7FFF1000)
+            .is_ok();
+        let _sig = self
+            .signify
+            .verify_signature("openbsd-76-base", b"release_data");
+        let _bio = self
+            .bioctl
+            .create_softraid_crypto("sd0a", "/dev/sd1a")
+            .is_ok();
         let _d = !self.daemons.get_daemon_status().is_empty();
         true
     }
