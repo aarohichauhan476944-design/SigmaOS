@@ -95,7 +95,10 @@ impl ArchPacmanAlpmHooksPrEngine {
         for h in &self.hooks {
             if h.when == when && changed_file.contains("vmlinuz") && h.target.contains("vmlinuz") {
                 executed.push(h.exec_cmd.clone());
-            } else if h.when == when && changed_file.contains("systemd") && h.target.contains("systemd") {
+            } else if h.when == when
+                && changed_file.contains("systemd")
+                && h.target.contains("systemd")
+            {
                 executed.push(h.exec_cmd.clone());
             }
         }
@@ -173,7 +176,9 @@ impl ArchMkinitcpioGeneratorPrEngine {
     pub fn generate_pr(&self) -> ArchLinuxV51PrSpec {
         ArchLinuxV51PrSpec {
             pr_id: 5102,
-            title: String::from("[Arch Gap Closure] mkinitcpio Modular Initramfs & Zstd Compression Engine"),
+            title: String::from(
+                "[Arch Gap Closure] mkinitcpio Modular Initramfs & Zstd Compression Engine",
+            ),
             branch: String::from("pr/arch-mkinitcpio-zstd"),
             target_component: String::from("src/boot/arch_mkinitcpio.rs"),
             gap_closure_score: 100,
@@ -224,11 +229,26 @@ impl ArchinstallProfileBuilderPrEngine {
             bootloader: String::from("systemd-boot"),
             encryption_luks2: true,
             btrfs_subvolumes: vec![
-                BtrfsSubvolSpec { name: String::from("@"), mountpoint: String::from("/") },
-                BtrfsSubvolSpec { name: String::from("@home"), mountpoint: String::from("/home") },
-                BtrfsSubvolSpec { name: String::from("@snapshots"), mountpoint: String::from("/.snapshots") },
-                BtrfsSubvolSpec { name: String::from("@var_log"), mountpoint: String::from("/var/log") },
-                BtrfsSubvolSpec { name: String::from("@pkg"), mountpoint: String::from("/var/cache/pacman/pkg") },
+                BtrfsSubvolSpec {
+                    name: String::from("@"),
+                    mountpoint: String::from("/"),
+                },
+                BtrfsSubvolSpec {
+                    name: String::from("@home"),
+                    mountpoint: String::from("/home"),
+                },
+                BtrfsSubvolSpec {
+                    name: String::from("@snapshots"),
+                    mountpoint: String::from("/.snapshots"),
+                },
+                BtrfsSubvolSpec {
+                    name: String::from("@var_log"),
+                    mountpoint: String::from("/var/log"),
+                },
+                BtrfsSubvolSpec {
+                    name: String::from("@pkg"),
+                    mountpoint: String::from("/var/cache/pacman/pkg"),
+                },
             ],
         }
     }
@@ -243,7 +263,9 @@ impl ArchinstallProfileBuilderPrEngine {
     pub fn generate_pr(&self) -> ArchLinuxV51PrSpec {
         ArchLinuxV51PrSpec {
             pr_id: 5103,
-            title: String::from("[Arch Gap Closure] archinstall Profile Builder & Btrfs Layout Engine"),
+            title: String::from(
+                "[Arch Gap Closure] archinstall Profile Builder & Btrfs Layout Engine",
+            ),
             branch: String::from("pr/archinstall-btrfs-luks2"),
             target_component: String::from("src/installer/archinstall_profile.rs"),
             gap_closure_score: 100,
@@ -394,7 +416,9 @@ impl ArchPacmanKeyringWotPrEngine {
     pub fn generate_pr(&self) -> ArchLinuxV51PrSpec {
         ArchLinuxV51PrSpec {
             pr_id: 5105,
-            title: String::from("[Arch Gap Closure] pacman-key Web of Trust & PQC Dilithium-5 Keyring"),
+            title: String::from(
+                "[Arch Gap Closure] pacman-key Web of Trust & PQC Dilithium-5 Keyring",
+            ),
             branch: String::from("pr/arch-pacman-key-wot-pqc"),
             target_component: String::from("src/security/arch_keyring_wot.rs"),
             gap_closure_score: 100,
@@ -451,7 +475,9 @@ impl ArchReflectorMirrorRankerPrEngine {
                     protocol: String::from("https"),
                 },
                 ArchMirrorStatus {
-                    url: String::from("https://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch"),
+                    url: String::from(
+                        "https://ftp.halifax.rwth-aachen.de/archlinux/$repo/os/$arch",
+                    ),
                     country: String::from("DE"),
                     latency_ms: 35,
                     protocol: String::from("https"),
@@ -468,7 +494,9 @@ impl ArchReflectorMirrorRankerPrEngine {
             .cloned()
             .collect();
         list.sort_by_key(|m| m.latency_ms);
-        list.into_iter().map(|m| format!("Server = {}", m.url)).collect()
+        list.into_iter()
+            .map(|m| format!("Server = {}", m.url))
+            .collect()
     }
 
     pub fn generate_pr(&self) -> ArchLinuxV51PrSpec {
@@ -527,7 +555,9 @@ impl ArchDevtoolsCleanChrootPrEngine {
     pub fn generate_pr(&self) -> ArchLinuxV51PrSpec {
         ArchLinuxV51PrSpec {
             pr_id: 5107,
-            title: String::from("[Arch Gap Closure] devtools / pkgctl Clean Chroot Builder & Namcap Linter"),
+            title: String::from(
+                "[Arch Gap Closure] devtools / pkgctl Clean Chroot Builder & Namcap Linter",
+            ),
             branch: String::from("pr/arch-devtools-chroot-namcap"),
             target_component: String::from("src/package/arch_devtools_chroot.rs"),
             gap_closure_score: 100,
@@ -606,7 +636,9 @@ impl ArchAurHelperPaccachePrEngine {
     pub fn generate_pr(&self) -> ArchLinuxV51PrSpec {
         ArchLinuxV51PrSpec {
             pr_id: 5108,
-            title: String::from("[Arch Gap Closure] AUR v5 RPC Helper & paccache Vacuum Cleaner Engine"),
+            title: String::from(
+                "[Arch Gap Closure] AUR v5 RPC Helper & paccache Vacuum Cleaner Engine",
+            ),
             branch: String::from("pr/arch-aur-v5-paccache"),
             target_component: String::from("src/package/arch_aur_paccache.rs"),
             gap_closure_score: 100,
@@ -667,7 +699,9 @@ impl ArchDowngradeAlaFetcherPrEngine {
     pub fn generate_pr(&self) -> ArchLinuxV51PrSpec {
         ArchLinuxV51PrSpec {
             pr_id: 5109,
-            title: String::from("[Arch Gap Closure] Downgrade Package Rollback & ALA Fetcher Engine"),
+            title: String::from(
+                "[Arch Gap Closure] Downgrade Package Rollback & ALA Fetcher Engine",
+            ),
             branch: String::from("pr/arch-downgrade-ala-fetcher"),
             target_component: String::from("src/package/arch_downgrade_ala.rs"),
             gap_closure_score: 100,
@@ -710,7 +744,10 @@ impl ArchInstallBootstrapToolsPrEngine {
     }
 
     pub fn format_genfstab_cmd(&self) -> String {
-        format!("genfstab -U {} > {}/etc/fstab", self.mount_point, self.mount_point)
+        format!(
+            "genfstab -U {} > {}/etc/fstab",
+            self.mount_point, self.mount_point
+        )
     }
 
     pub fn format_arch_chroot_cmd(&self, cmd: &str) -> String {
@@ -720,7 +757,9 @@ impl ArchInstallBootstrapToolsPrEngine {
     pub fn generate_pr(&self) -> ArchLinuxV51PrSpec {
         ArchLinuxV51PrSpec {
             pr_id: 5110,
-            title: String::from("[Arch Gap Closure] genfstab UUID & arch-chroot VFS Bootstrap Engine"),
+            title: String::from(
+                "[Arch Gap Closure] genfstab UUID & arch-chroot VFS Bootstrap Engine",
+            ),
             branch: String::from("pr/arch-genfstab-arch-chroot"),
             target_component: String::from("src/installer/arch_bootstrap_tools.rs"),
             gap_closure_score: 100,
@@ -973,8 +1012,14 @@ mod tests {
     fn test_arch_install_bootstrap_tools_pr_engine() {
         let engine = ArchInstallBootstrapToolsPrEngine::new();
         assert!(engine.verify());
-        assert_eq!(engine.format_genfstab_cmd(), "genfstab -U /mnt > /mnt/etc/fstab");
-        assert_eq!(engine.format_arch_chroot_cmd("pacman -Syu"), "arch-chroot /mnt pacman -Syu");
+        assert_eq!(
+            engine.format_genfstab_cmd(),
+            "genfstab -U /mnt > /mnt/etc/fstab"
+        );
+        assert_eq!(
+            engine.format_arch_chroot_cmd("pacman -Syu"),
+            "arch-chroot /mnt pacman -Syu"
+        );
         let pr = engine.generate_pr();
         assert_eq!(pr.pr_id, 5110);
     }

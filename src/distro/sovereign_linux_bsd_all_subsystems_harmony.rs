@@ -827,23 +827,24 @@ impl SovereignSubsystemDistroHarmonyEngine {
         }
 
         match (source_distro, target_distro) {
-            (LinuxBsdDistroInspiration::ArchLinux, LinuxBsdDistroInspiration::DebianGNU) => {
-                payload.replace("pacman_hook", "dpkg_trigger")
-                       .replace("pkg.tar.zst", "deb")
-            }
-            (LinuxBsdDistroInspiration::FreeBSD, LinuxBsdDistroInspiration::ArchLinux) => {
-                payload.replace("jail_vnet", "ebpf_xdp_namespace")
-                       .replace("pkg_freebsd", "pacman_alpm")
-            }
-            (LinuxBsdDistroInspiration::OpenBSD, LinuxBsdDistroInspiration::ArchLinux) => {
-                payload.replace("pledge_unveil", "landlock_v5_bpf")
-                       .replace("pf_rules", "nftables_rules")
-            }
-            (LinuxBsdDistroInspiration::NixOS, LinuxBsdDistroInspiration::GentooLinux) => {
-                payload.replace("flake_closure", "ebuild_use_flags")
-                       .replace("store_path", "portage_vdb")
-            }
-            _ => format!("transpiled_from_{}_to_{}:{}", source_distro.as_str(), target_distro.as_str(), payload),
+            (LinuxBsdDistroInspiration::ArchLinux, LinuxBsdDistroInspiration::DebianGNU) => payload
+                .replace("pacman_hook", "dpkg_trigger")
+                .replace("pkg.tar.zst", "deb"),
+            (LinuxBsdDistroInspiration::FreeBSD, LinuxBsdDistroInspiration::ArchLinux) => payload
+                .replace("jail_vnet", "ebpf_xdp_namespace")
+                .replace("pkg_freebsd", "pacman_alpm"),
+            (LinuxBsdDistroInspiration::OpenBSD, LinuxBsdDistroInspiration::ArchLinux) => payload
+                .replace("pledge_unveil", "landlock_v5_bpf")
+                .replace("pf_rules", "nftables_rules"),
+            (LinuxBsdDistroInspiration::NixOS, LinuxBsdDistroInspiration::GentooLinux) => payload
+                .replace("flake_closure", "ebuild_use_flags")
+                .replace("store_path", "portage_vdb"),
+            _ => format!(
+                "transpiled_from_{}_to_{}:{}",
+                source_distro.as_str(),
+                target_distro.as_str(),
+                payload
+            ),
         }
     }
 
@@ -1203,7 +1204,10 @@ mod tests {
             LinuxBsdDistroInspiration::ArchLinux,
             "pledge_unveil:rpath:pf_rules:block",
         );
-        assert_eq!(openbsd_translated, "landlock_v5_bpf:rpath:nftables_rules:block");
+        assert_eq!(
+            openbsd_translated,
+            "landlock_v5_bpf:rpath:nftables_rules:block"
+        );
 
         let (audit_map, score) = orchestrator.audit_all_subsystems_distro_compliance();
         assert_eq!(audit_map.len(), 31);

@@ -168,7 +168,10 @@ impl CachyOsInteractiveKernelBuilderPrEngine {
             self.isa_target.clone(),
             format!("-mprefer-vector-width={}", self.vector_width),
         ];
-        if self.compiler_passes.contains(&KernelOptimizationPass::ThinLto) {
+        if self
+            .compiler_passes
+            .contains(&KernelOptimizationPass::ThinLto)
+        {
             flags.push("-flto=thin".to_string());
         }
         flags

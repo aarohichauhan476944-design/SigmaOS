@@ -51,10 +51,14 @@ impl LfsBsdPrCategory {
             Self::LfsSysvInitRunlevels => "LFS SysV init bootscripts & runlevels",
             Self::LfsPkgtoolDestdir => "LFS self-hosted source package build & DESTDIR staging",
             Self::LfsKernelConfigOptimizer => "LFS minimal zero-bloat kernel .config optimizer",
-            Self::OpenBsdKarlRelinking => "OpenBSD KARL kernel address randomization & pledge/unveil",
+            Self::OpenBsdKarlRelinking => {
+                "OpenBSD KARL kernel address randomization & pledge/unveil"
+            }
             Self::FreeBsdVimageVnet => "FreeBSD VIMAGE/VNET network stack virtualization",
             Self::FreeBsdPoudrierePorts => "FreeBSD Poudriere clean-chroot bulk ports builder",
-            Self::NetBsdRumpVeriexec => "NetBSD Rump Kernel hypercall drivers & Veriexec signatures",
+            Self::NetBsdRumpVeriexec => {
+                "NetBSD Rump Kernel hypercall drivers & Veriexec signatures"
+            }
             Self::DragonFlyHammer2Pfs => "DragonFly BSD HAMMER2 PFS multi-master snapshots & logs",
             Self::DragonFlyVkernelSandbox => "DragonFly BSD VKernel virtual kernel execution",
         }
@@ -201,28 +205,51 @@ impl SovereignLfsBsdPrGateway {
         }
 
         // 1. Verify LFS toolchain compiler passes
-        let _chroot = self.master_harmony.lfs_toolchain.prepare_chroot_environment();
+        let _chroot = self
+            .master_harmony
+            .lfs_toolchain
+            .prepare_chroot_environment();
         assert!(self.master_harmony.lfs_toolchain.chroot_prepared);
 
         // 2. Verify LFS bootscripts init runlevel switch
-        let activated = self.master_harmony.lfs_bootscripts.set_runlevel(sovereign_linux_bsd_lfs_master_harmony::LfsRunlevel::Runlevel3MultiUserNet);
+        let activated = self.master_harmony.lfs_bootscripts.set_runlevel(
+            sovereign_linux_bsd_lfs_master_harmony::LfsRunlevel::Runlevel3MultiUserNet,
+        );
         assert!(activated >= 1);
 
         // 3. Verify LFS package build and install
-        assert!(self.master_harmony.lfs_pkgtool.build_and_install_package("bash", "5.2.21", &["/bin/bash"]));
+        assert!(self.master_harmony.lfs_pkgtool.build_and_install_package(
+            "bash",
+            "5.2.21",
+            &["/bin/bash"]
+        ));
         assert!(self.master_harmony.lfs_pkgtool.is_installed("bash"));
 
         // 4. Verify LFS kernel config optimization
-        assert!(self.master_harmony.lfs_kernel_optimizer.verify_required_lfs_options());
+        assert!(self
+            .master_harmony
+            .lfs_kernel_optimizer
+            .verify_required_lfs_options());
 
         // 5. Verify NetBSD Rump driver hypercall execution
-        assert!(self.master_harmony.netbsd_rump.attach_userspace_driver("rump_pci"));
-        let hypercall_res = self.master_harmony.netbsd_rump.execute_hypercall("rump_pci", "probe");
+        assert!(self
+            .master_harmony
+            .netbsd_rump
+            .attach_userspace_driver("rump_pci"));
+        let hypercall_res = self
+            .master_harmony
+            .netbsd_rump
+            .execute_hypercall("rump_pci", "probe");
         assert!(hypercall_res.is_ok());
 
         // 6. Verify FreeBSD Poudriere bulk ports builder
-        self.master_harmony.freebsd_poudriere.queue_port("sysutils/fastfetch");
-        let built = self.master_harmony.freebsd_poudriere.build_all_queued_ports();
+        self.master_harmony
+            .freebsd_poudriere
+            .queue_port("sysutils/fastfetch");
+        let built = self
+            .master_harmony
+            .freebsd_poudriere
+            .build_all_queued_ports();
         assert_eq!(built, 1);
 
         true
