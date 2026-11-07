@@ -166,6 +166,13 @@ description = "Notification policy/data model; no verified service or graphical 
 test_evidence = "Module tests only; no user-session integration"
 next_milestone = "Connect notifications to the session and test delivery, dismissal, and persistence"
 
+[distro.arch_github_components]
+status = "unit-tested"
+files = ["src/distro/arch_linux_github_repo_components_pr_engine.rs", "docs/PR_PROPOSAL_ARCH_LINUX_GITHUB_PARITY.md"]
+description = "Arch Linux GitHub Organization ecosystem parity PR gateway (archinstall, archiso, reflector, powerpill, pacman, devtools, dbscripts, modprobed-db, aurutils, downgrade, sysctl, signstar, alpm.rs, buildbtw, gluebuddy, arch-rebuild-order, arch-repro-status, repod, arch-signoff, sandcrawler)"
+test_evidence = "6 unit tests pass via rustc --test src/distro/arch_linux_github_repo_components_pr_engine.rs covering all 16 PR proposals, secure enclave signing, ALPM dependency resolution, build orchestration, DAG rebuilder, and bit-identical attestation"
+next_milestone = "Integration with hardware token USB driver and live repo synchronization"
+
 [package.signing]
 status = "working"
 files = ["src/package/signing.rs"]
