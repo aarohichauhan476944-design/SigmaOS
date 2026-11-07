@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.qubes_github_repo_inspirations_pr]
+status = "complete"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Qubes Linux GitHub repo inspirations PR suite implementing QubesAdminApiDaemonEngine, QubesQrexecPolicyDispatcherEngine, Split-GPG/SSH, USBGuard, GUI color framing, DispVM, thin pool storage, Whonix Tor gateway, and Anti-Evil Maid attestation."
