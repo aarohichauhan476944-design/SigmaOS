@@ -1276,4 +1276,11 @@ if [ -f "src/creative/deckcraft.rs" ]; then
     ./build/test_deckcraft
 fi
 
+if [ -f "src/distro/debian_github_repo_missing_components_v53_pr.rs" ]; then
+    echo "Running Debian Linux Missing Components V53 PR Suite test suite..."
+    mkdir -p build
+    rustc --test src/distro/debian_github_repo_missing_components_v53_pr.rs --edition=2021 -o build/test_debian_v53
+    ./build/test_debian_v53
+fi
+
 echo "All SigmaOS test suites completed."
