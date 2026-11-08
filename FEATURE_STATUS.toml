@@ -361,6 +361,13 @@ description = "Runtime lock dependency tracking graph for deadlock and lock orde
 test_evidence = "Architecture specification published in docs/PROCESS_SYNCHRONIZATION_PLAN.md"
 next_milestone = "Instrument kernel locks with lockdep annotations"
 
+[distro.gentoo_github_repo_inspirations_pr]
+status = "complete"
+files = ["src/distro/gentoo_github_repo_inspirations_pr.rs"]
+description = "Gentoo Linux GitHub repo inspirations PR suite including portage EAPI 8 solver, eselect, etc-update, layman, openrc, catalyst, hardened PaX, pkgcheck, distcc, gentoolkit, genkernel, crossdev, elogv, and mirrorselect"
+test_evidence = "rustc --test src/distro/gentoo_github_repo_inspirations_pr.rs passes 16 tests"
+next_milestone = "Continuous portage package repository tree sync"
+
 [userspace.system_utilities]
 status = "modeled"
 files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"]
