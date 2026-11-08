@@ -1198,6 +1198,13 @@ if [ -f "src/distro/debian_github_repo_inspirations_pr.rs" ]; then
     ./build/test_debian_pr
 fi
 
+if [ -f "src/distro/debian_github_repo_missing_components_v53_pr.rs" ]; then
+    echo "Running Debian GitHub Repo Missing Components V53 PR Suite test suite..."
+    mkdir -p build
+    rustc --test src/distro/debian_github_repo_missing_components_v53_pr.rs --edition=2021 -o build/test_debian_v53
+    ./build/test_debian_v53
+fi
+
 if [ -f "src/signal/sovereign_signal_development_and_pr_suite.rs" ]; then
     echo "Running Sovereign Signal Development and Parity PR Suite..."
     mkdir -p build
