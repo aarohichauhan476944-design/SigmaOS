@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.kali_security_github_repo_inspirations_pr]
+status = "implemented"
+files = ["src/distro/kali_github_repo_inspirations_pr.rs"]
+description = "Kali Linux GitHub repo inspirations PR suite: Undercover, NetHunter, WinKeX, Purple SOC, Live USB LUKS nuke, CVE tracker, Tweaks, Autopilot, Anonsurf, WSL bridge, PQC keyring, and Desktop Base"
+test_evidence = "Unit tests pass via rustc --test src/distro/kali_github_repo_inspirations_pr.rs"
+next_milestone = "Hardware DuckyScript USB gadget driver binding"
