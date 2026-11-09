@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.fedora_github_repo_inspirations_pr]
+status = "complete"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Fedora Linux GitHub repository inspirations and PR proposal engines covering Mock cleanroom builder, Koji build pipeline, Bodhi updates, Zincati auto-update, Ignition provisioning, container-selinux, Greenboot, fedora-messaging, COPR, DNF5 solver, Flatpak, Certmonger, Kickstart, Pagure, FreeIPA/SSSD, Anaconda, crypto-policies, fedora-review, and MediaWriter."
