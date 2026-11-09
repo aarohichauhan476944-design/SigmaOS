@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.endeavour_os_github_repo_inspirations_pr_suite]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "EndeavourOS GitHub repository inspirations suite with welcome engine, log tool sanitizer, rankmirrors, nvidia-inst, dracut initramfs, pacman hooks, reboot recommended detector, quickstart package installer, power profiles switcher, pacdiff merger, akm kernel switcher, and Dilithium-5 PQC-signed PR proposal matrix."
