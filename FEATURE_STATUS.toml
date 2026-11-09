@@ -5,6 +5,13 @@
 # Values such as "working" are legacy component statuses; use docs/PROJECT_STATUS.md and
 # the owning wiki page for integration, release blockers, tested configuration, and limitations.
 
+[distro.mint_github_repo_inspirations_pr_suite]
+status = "unit-tested"
+files = ["src/distro/mint_github_repo_inspirations_pr.rs"]
+description = "Linux Mint GitHub repository inspirations and PR proposal engines covering mintupdate, mintinstall, mintstick, warpinator, hypnotix, bulky, thingy, mintnanny, mintwelcome, and Cinnamon desktop integration"
+test_evidence = "Verified via standalone rustc unit tests and run_sigma_tests.sh test suite"
+next_milestone = "Integrate into runtime Zenith desktop environment"
+
 [kernel.signal_handler]
 status = "modeled"
 files = ["docs/SIGNAL_HANDLER_PLAN.md", "docs/SIGNAL_HANDLER_AUDIT_AND_ABI_PROFILE.md", "src/signal/mod.rs"]
