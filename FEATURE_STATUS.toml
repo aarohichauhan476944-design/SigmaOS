@@ -5,6 +5,13 @@
 # Values such as "working" are legacy component statuses; use docs/PROJECT_STATUS.md and
 # the owning wiki page for integration, release blockers, tested configuration, and limitations.
 
+[distro.qubes_github_repo_inspirations_pr]
+status = "implemented"
+files = ["src/distro/qubes_github_repo_inspirations_pr.rs"]
+description = "Qubes OS GitHub repository inspirations PR suite providing admin API, qrexec policy, split vault, sys-usb guard, colored frames, amnesic dispvm, and anti-evil-maid verification."
+test_evidence = "7 unit tests passing in src/distro/qubes_github_repo_inspirations_pr.rs"
+next_milestone = "Production hardware IOMMU and hypercall binding"
+
 [kernel.signal_handler]
 status = "modeled"
 files = ["docs/SIGNAL_HANDLER_PLAN.md", "docs/SIGNAL_HANDLER_AUDIT_AND_ABI_PROFILE.md", "src/signal/mod.rs"]
