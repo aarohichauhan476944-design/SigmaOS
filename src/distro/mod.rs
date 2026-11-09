@@ -116,6 +116,8 @@ pub mod clear_linux;
 pub mod community;
 pub mod compat_layers;
 pub mod compliance;
+pub mod arch_linux_github_repo_inspirations_pr;
+pub use arch_linux_github_repo_inspirations_pr::*;
 pub mod debian_github_repo_inspirations_pr;
 pub use debian_github_repo_inspirations_pr::*;
 pub mod debian_parity;
