@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.cachy_github_repo_inspirations_pr]
+status = "complete"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Cachy Linux GitHub repository inspirations and PR proposal engines covering sched_ext BORE governor, CHWD hardware detection, sysctl settings tuner, rate-mirrors, repo manager, handheld TDP governor, snapper sync, gaming meta, UKSM, network tuner, calamares subvolumes, bug report, clean chroot, and ananicy-cpp rules."
