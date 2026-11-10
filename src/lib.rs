@@ -231,6 +231,7 @@ pub use dashboard::{
 };
 pub use distro::arch_missing_components_parity_pr::*;
 pub use distro::openbsd_missing_components_parity_pr::*;
+pub use distro::cachy_github_repo_inspirations_pr::*;
 pub use distro::{
     AdminAction, AiSysAdmin, AppBundleRuntime, AppManifest, AppsAuditTool, AptCacheSimulator,
     ArchBuildSystem, ArchMirror, ArchPacmanHooksManager, ArchRepoType, AuditResult, AuditRule,
