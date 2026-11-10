@@ -159,3 +159,9 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+[feature.mint_github_repo_inspirations_pr_suite]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Linux Mint GitHub repository inspirations and PR proposal engines covering mintupdate 5-tier classification, mintinstall, mintstick, warpinator, hypnotix, bulky, thingy, mintnanny, mintwelcome, mintreport, mintlocale, mintdesktop, mintbackup, mintdrivers, mintsources, mintupgrade, sticky notes, XApp status notifier, slick-greeter, nemo actions, muffin compositor, and Cinnamon spices applets."
