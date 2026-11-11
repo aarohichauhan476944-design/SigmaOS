@@ -159,3 +159,37 @@ status = "partial"
 tested_on = ["unit-test"]
 required_for_release = true
 description = "TSS (Task State Segment) structure, InterruptFrame, UserModeContext for Ring 3 user mode transition via iretq/sysretq"
+
+# -----------------------------------------------------------------------------
+# 6. Elementary Linux GitHub Repo Inspirations (Inspiration: elementary)
+# -----------------------------------------------------------------------------
+
+[feature.elementary_granite_hig_palette]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Granite UI toolkit HIG guidelines, 4px grid alignment, dynamic accent colors (Blueberry, Strawberry, etc.), and dark style switcher."
+
+[feature.elementary_gala_compositor_workspaces]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Gala window manager multitasking view overview, dynamic workspace allocation/reaping, and picture-in-picture modes."
+
+[feature.elementary_appcenter_pwyw_store]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "AppCenter curated application marketplace with Pay-What-You-Want (PWYW) voluntary monetization engine."
+
+[feature.elementary_contractor_service_bus]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Contractor dynamic service sharing contracts based on MIME negotiation for seamless inter-process integration."
+
+[feature.elementary_terminal_unsafe_paste_shield]
+status = "implemented"
+tested_on = ["unit-test"]
+required_for_release = true
+description = "Pantheon Terminal unsafe command paste detection guarding against destructive terminal snippets."
