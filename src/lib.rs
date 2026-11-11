@@ -229,6 +229,7 @@ pub use dashboard::statutory_compliance::{
 pub use dashboard::{
     DashboardWidget, MetricData, MetricType, SystemMonitor, UnifiedDashboard, WidgetType,
 };
+pub use distro::arch_linux_github_repo_inspirations_pr::*;
 pub use distro::arch_missing_components_parity_pr::*;
 pub use distro::openbsd_missing_components_parity_pr::*;
 pub use distro::{
