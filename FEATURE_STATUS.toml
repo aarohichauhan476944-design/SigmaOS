@@ -367,3 +367,10 @@ files = ["docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md", "wiki/SYSTEM_UTILITIES_DEV
 description = "SigmaOS System Utilities Master Architecture, POSIX compatibility baseline, 18-PR roadmap, periodic maintenance framework, and review merge gates"
 test_evidence = "Architectural specification and command contract roadmap published in docs/SYSTEM_UTILITIES_DEVELOPMENT_PLAN.md"
 next_milestone = "PR 1: Audit current tools and define compatibility policy; PR 3: Shared CLI contract helpers"
+
+[distro.endeavour_os_github_repo_inspirations_pr]
+status = "implemented"
+files = ["src/distro/endeavour_os_github_repo_inspirations_pr.rs"]
+description = "EndeavourOS GitHub repository inspirations and PR proposal engines covering eos-welcome, eos-log-tool, eos-rankmirrors, eos-update-notifier, nvidia-inst, eos-dracut, endeavouros-hooks, eos-reboot-required-notifier, eos-quickstart, power-profiles-switcher, eos-pacdiff, and akm."
+test_evidence = "Unit tests pass via rustc --test src/distro/endeavour_os_github_repo_inspirations_pr.rs"
+next_milestone = "Integration with live installer and desktop notification daemon"
