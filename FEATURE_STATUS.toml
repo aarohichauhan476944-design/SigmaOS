@@ -180,6 +180,13 @@ description = "Universal package manager infrastructure with APT/dnf inspiration
 test_evidence = "Unit tests pass; extensive package management ecosystem with 80+ package modules"
 next_milestone = "Integration with kernel package subsystem and physical package installation"
 
+[distro.arch_linux_github_parity]
+status = "unit-tested"
+files = ["src/distro/arch_linux_github_pr_suite.rs", "docs/PR_PROPOSAL_ARCH_LINUX_GITHUB_PARITY.md"]
+description = "SigmaOS Arch Linux GitHub Repository Inspirations & Component Improvement PR Suite: alpm transaction hooks, mkinitcpio initramfs generator, devtools clean chroot, archinstall profiles, arch-audit CVE tracker, pacman-key PQC keyring, and reflector mirror ranker"
+test_evidence = "Unit tests pass via rustc --test src/distro/arch_linux_github_pr_suite.rs --edition=2021; verified in ./run_sigma_tests.sh"
+next_milestone = "Connect live chroot execution and real PQC keyring validation to SigmaOS package manager"
+
 [security.audit]
 status = "working"
 files = ["src/security/audit.rs"]
