@@ -69,6 +69,9 @@ pub mod antix_zorin_innovations;
 pub mod kali_security;
 pub mod mint_innovations;
 pub mod mint_omarchy_hybrid_synthesis;
+pub mod parrot_github_repo_inspirations_pr;
+pub use parrot_github_repo_inspirations_pr::*;
+
 pub mod parrot_security;
 pub use mint_omarchy_hybrid_synthesis::*;
 pub mod mint_expanded_tools;
